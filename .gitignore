@@ -1,3 +1,4 @@
 .idea/
 *.iml
 */target/
+zscheduler-core/src/main/scala/com/github/slablock/zcheduler/core/protos/
