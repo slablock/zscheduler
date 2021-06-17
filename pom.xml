@@ -25,7 +25,6 @@
         <akka.version>2.6.14</akka.version>
         <akka.http.version>10.2.4</akka.http.version>
         <akka.management.version>1.1.0</akka.management.version>
-        <protobuf.outputDirectory>src/main/scala</protobuf.outputDirectory>
         <protobuf.version>3.17.2</protobuf.version>
     </properties>
 
@@ -143,10 +142,41 @@
                 <artifactId>akka-cluster-typed_${scala.binary.version}</artifactId>
                 <version>${akka.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>com.typesafe.akka</groupId>
+                <artifactId>akka-stream_${scala.binary.version}</artifactId>
+                <version>${akka.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>com.typesafe.akka</groupId>
                 <artifactId>akka-http_${scala.binary.version}</artifactId>
                 <version>${akka.http.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.circe</groupId>
+                <artifactId>circe-core_${scala.binary.version}</artifactId>
+                <version>0.14.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.circe</groupId>
+                <artifactId>circe-parser_${scala.binary.version}</artifactId>
+                <version>0.14.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.circe</groupId>
+                <artifactId>circe-generic_${scala.binary.version}</artifactId>
+                <version>0.14.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>de.heikoseeberger</groupId>
+                <artifactId>akka-http-circe_${scala.binary.version}</artifactId>
+                <version>1.36.0</version>
             </dependency>
 
             <dependency>
@@ -209,7 +239,6 @@
                             <goal>compile</goal>
                         </goals>
                     </execution>
-
                     <execution>
                         <phase>compile</phase>
                         <goals>
@@ -258,53 +287,16 @@
                 </executions>
                 <configuration>
                     <includeMavenTypes>transitive</includeMavenTypes>
-                    <addSources>none</addSources>
+                    <optimizeCodegen>false</optimizeCodegen>
                     <outputTargets>
                         <outputTarget>
                             <type>scalapb</type>
                             <pluginArtifact>com.thesamet.scalapb:protoc-gen-scala:0.11.3:sh:unix</pluginArtifact>
-                            <!-- changed to append protobuf, because there is also generated-sources/annotations. -->
-                            <outputDirectory>${protobuf.outputDirectory}</outputDirectory>
-                            <!-- include sources in target jar file. -->
                             <addSources>main</addSources>
+                            <cleanOutputFolder>true</cleanOutputFolder>
                         </outputTarget>
                     </outputTargets>
                 </configuration>
-            </plugin>
-
-            <!--
-     The javadoc plugin needs some special attention as we changed the output path for some of the generated sources.
-     The Java Protobuf generated files go to ${protobuf.java.outputDirectory}.
-     This was done to not interfere with other plugins.
-     -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.3.0</version>
-                <configuration>
-                    <sourcepath>
-                        ${project.build.sourceDirectory}:${project.build.directory}/generated-sources/annotations:${protobuf.outputDirectory}
-                    </sourcepath>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.2.0</version>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>${protobuf.outputDirectory}</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

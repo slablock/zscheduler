@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+import "scalapb/scalapb.proto";
+import public "clientActor.proto";
+
+package com.github.slablock.zscheduler.server.actor.protos;
+
+option (scalapb.options) = {
+  scope: FILE
+  flat_package: false
+  single_file: true
+  java_conversions: false
+  lenses: false
+  getters: false
+  retain_source_code_info: false
+  no_default_values_in_constructor: false
+  preserve_unknown_fields: false
+  enum_value_naming: CAMEL_CASE
+  enum_strip_prefix: false
+  no_primitive_wrappers: true
+};
+
+
+message BrokerMsg {
+    oneof sealed_value {
+        BrokerStatus status = 1;
+    }
+}
+
+message BrokerStatus {
+    ActorRefData sender = 2;
+}
+
+message ActorRefData {
+    option (scalapb.message).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClusterInfo]";
+    option (scalapb.message).no_box = true;
+    string path = 1;
+}

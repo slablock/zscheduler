@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+import "scalapb/scalapb.proto";
+
+package com.github.slablock.zscheduler.server.actor.protos;
+
+option (scalapb.options) = {
+  scope: FILE
+  flat_package: false
+  single_file: true
+  java_conversions: false
+  lenses: false
+  getters: false
+  retain_source_code_info: false
+  no_default_values_in_constructor: false
+  preserve_unknown_fields: false
+  enum_value_naming: CAMEL_CASE
+  enum_strip_prefix: false
+  no_primitive_wrappers: true
+};
+
+
+message ClientMsg {
+    oneof sealed_value {
+        ClusterInfo info = 1;
+        Query query = 2;
+    }
+}
+
+message ClusterInfo {
+    string data = 1;
+}
+
+message Query {
+    string id = 1;
+}
+
+message ListingResponse {
+
+}
