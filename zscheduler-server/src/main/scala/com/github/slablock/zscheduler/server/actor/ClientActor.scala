@@ -40,6 +40,7 @@ object ClientActor {
   sealed trait Command
 
   def apply(): Behavior[ClientMsg] = Behaviors.setup[ClientMsg](context => {
+    context.spawn(ClusterListenerActor(), "lister")
     new ClientActor(context)
   })
 
