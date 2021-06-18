@@ -23,16 +23,51 @@ option (scalapb.options) = {
 
 message BrokerMsg {
     oneof sealed_value {
-        BrokerStatus status = 1;
+        JobSubmitRequest jobSubmitRequest = 1;
+        BrokerStatus status = 2;
+        SubmitTaskResp submitTaskResp = 3;
+        KillTaskResp killTaskResp = 4;
     }
 }
 
-message BrokerStatus {
-    ActorRefData sender = 2;
+
+message JobSubmitRequest {
+    string name = 1;
+    int32 type = 2;
+    string content = 3;
+    string user = 4;
+    ClientActorRef client = 5;
 }
 
-message ActorRefData {
-    option (scalapb.message).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClusterInfo]";
+message JobQueryStatusRequest {
+    int64 jobId = 1;
+    ClientActorRef client = 2;
+}
+
+message JobQueryLogRequest {
+    int64 jobId = 1;
+    int32 logType = 2;
+    ClientActorRef client = 3;
+}
+
+message BrokerStatus {
+    ClientActorRef sender = 2;
+}
+
+message SubmitTaskResp {
+    bool accept = 1;
+    bool success = 2;
+    string message = 3;
+    int32 status = 4;
+}
+
+message KillTaskResp {
+    bool success = 1;
+    string message = 2;
+}
+
+message ClientActorRef {
+    option (scalapb.message).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg]";
     option (scalapb.message).no_box = true;
     string path = 1;
 }

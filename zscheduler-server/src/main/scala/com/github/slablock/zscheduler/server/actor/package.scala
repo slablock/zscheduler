@@ -1,32 +1,36 @@
 package com.github.slablock.zscheduler.server
 
+import akka.actor.ActorSystem
 import akka.actor.typed.scaladsl.adapter.ClassicActorSystemOps
 import akka.actor.typed.{ActorRef, ActorRefResolver}
 import akka.serialization.Serialization
-import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClientMsg, ClusterInfo}
-import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{ActorRefData=>BrokerRef}
-import com.github.slablock.zscheduler.server.actor.protos.demoActorProtocol.{ActorRefData, Resp}
+import com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg
+import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerMsg, ClientActorRef}
+import com.github.slablock.zscheduler.server.actor.protos.workerActor.BrokerActorRef
 import scalapb.TypeMapper
+
 
 package object actor {
 
-  val system = Serialization.getCurrentTransportInformation().system
-  val refResolver = ActorRefResolver(system.toTyped)
+  val system: ActorSystem = Serialization.getCurrentTransportInformation().system
+  val refResolver: ActorRefResolver = ActorRefResolver(system.toTyped)
 
-  implicit val tm =
-    TypeMapper[ActorRefData, ActorRef[Any]](refData => {
-      refResolver.resolveActorRef[Any](refData.path)
+  implicit val clientActorRefMapper: TypeMapper[ClientActorRef, ActorRef[ClientMsg]] =
+    TypeMapper[ClientActorRef, ActorRef[ClientMsg]](
+      refData => {
+      refResolver.resolveActorRef[ClientMsg](refData.path)
     })(ref => {
       val path = refResolver.toSerializationFormat(ref)
-      ActorRefData(path)
+      ClientActorRef(path)
     })
 
-  implicit val client =
-    TypeMapper[BrokerRef, ActorRef[ClusterInfo]](refData => {
-      refResolver.resolveActorRef[ClusterInfo](refData.path)
-    })(ref => {
+  implicit val brokerActorRefMapper: TypeMapper[BrokerActorRef, ActorRef[BrokerMsg]] =
+    TypeMapper[BrokerActorRef, ActorRef[BrokerMsg]](
+      refData => {
+        refResolver.resolveActorRef[BrokerMsg](refData.path)
+      })(ref => {
       val path = refResolver.toSerializationFormat(ref)
-      BrokerRef(path)
+      BrokerActorRef(path)
     })
 
 }

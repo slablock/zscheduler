@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+import "scalapb/scalapb.proto";
+import public "brokerActor.proto";
+
+package com.github.slablock.zscheduler.server.actor.protos;
+
+option (scalapb.options) = {
+  scope: FILE
+  flat_package: false
+  single_file: true
+  java_conversions: false
+  lenses: false
+  getters: false
+  retain_source_code_info: false
+  no_default_values_in_constructor: false
+  preserve_unknown_fields: false
+  enum_value_naming: CAMEL_CASE
+  enum_strip_prefix: false
+  no_primitive_wrappers: true
+};
+
+
+message WorkerMsg {
+    oneof sealed_value {
+        TaskSubmitRequest taskSubmitRequest = 1;
+        TaskKillRequest taskKillRequest = 2;
+    }
+}
+
+message TaskSubmitRequest {
+    string fullId = 1;
+    string taskName = 2;
+    int32 taskType = 3;
+    string content = 4;
+    string user = 5;
+    BrokerActorRef broker = 6;
+}
+
+message TaskKillRequest {
+    string fullId = 1;
+    int32 taskType = 2;
+    string user = 3;
+    BrokerActorRef broker = 4;
+}
+
+message BrokerActorRef {
+    option (scalapb.message).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.brokerActor.BrokerMsg]";
+    option (scalapb.message).no_box = true;
+    string path = 1;
+}
