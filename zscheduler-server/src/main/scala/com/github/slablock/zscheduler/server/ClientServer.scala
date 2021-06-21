@@ -22,11 +22,9 @@ class ClientServer {
     val systemName = ClientConf.config.getString(ClientConf.SYSTEM_NAME)
     implicit val system: ActorSystem[Nothing] = ActorSystem[Nothing](Behaviors.setup[Nothing](context => {
       bootStrap(context)
-      Behaviors.receiveSignal[Nothing] {
-        case (context, Terminated(_)) => {
-          context
-          Behaviors.stopped[Nothing]
-        }
+      Behaviors.receiveSignal {
+        case (_, Terminated(_)) =>
+          Behaviors.stopped
       }
     }), systemName, ClientConf.config)
     LOGGER.info("Client start successfully!!!")

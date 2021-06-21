@@ -2,7 +2,7 @@ package com.github.slablock.zscheduler.server.actor
 
 import akka.actor.typed.receptionist.Receptionist
 import akka.actor.typed.scaladsl.AskPattern.Askable
-import akka.actor.typed.{ActorRef, Behavior, Scheduler}
+import akka.actor.typed.{Behavior, Scheduler}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.util.Timeout
 import com.github.slablock.zscheduler.server.actor.protos.brokerActor.BrokerStatus
@@ -10,6 +10,7 @@ import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClientMsg
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContextExecutor
+
 
 class ClientActor(context: ActorContext[ClientMsg]) extends AbstractBehavior[ClientMsg](context) {
 
