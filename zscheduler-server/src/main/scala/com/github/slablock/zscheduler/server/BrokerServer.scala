@@ -1,7 +1,7 @@
 package com.github.slablock.zscheduler.server
 
 import akka.actor.typed.{ActorSystem, Terminated}
-import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import com.github.slablock.zcheduler.core.lifecycle.{LifecycleStart, LifecycleStop}
 import com.github.slablock.zscheduler.server.actor.BrokerActor
 import com.github.slablock.zscheduler.server.broker.BrokerConf
@@ -12,12 +12,16 @@ class BrokerServer {
 
   private val LOGGER = LoggerFactory.getLogger(classOf[BrokerServer])
 
+  def bootStrap(context: ActorContext[Nothing]): Unit = {
+    context.spawn(BrokerActor(), classOf[BrokerActor].getSimpleName)
+  }
+
   @LifecycleStart
   def start(): Unit = {
     val systemName = config.getString(BrokerConf.SYSTEM_NAME)
-    ActorSystem[Nothing](Behaviors.setup[Nothing](context => {
-      context.spawn(BrokerActor(), classOf[BrokerActor].getSimpleName)
-      Behaviors.receiveSignal {
+    implicit val system: ActorSystem[Nothing] = ActorSystem[Nothing](Behaviors.setup[Nothing](context => {
+      bootStrap(context)
+      Behaviors.receiveSignal[Nothing] {
         case (_, Terminated(_)) =>
           Behaviors.stopped
       }

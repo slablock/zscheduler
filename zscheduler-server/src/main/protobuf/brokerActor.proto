@@ -33,7 +33,7 @@ message BrokerMsg {
 
 message JobSubmitRequest {
     string name = 1;
-    int32 type = 2;
+    int32 jobType = 2;
     string content = 3;
     string user = 4;
     ClientActorRef client = 5;

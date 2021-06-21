@@ -7,6 +7,7 @@ import akka.http.scaladsl.server.Route
 import ClientProtocol.{IpInfo, Protocols}
 import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClientMsg, Query}
 import com.github.slablock.zscheduler.server.client.ClientConf.config
+import com.github.slablock.zscheduler.server.client.entity.Job
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -23,6 +24,12 @@ class HttpServer private (val port: Int, val interface: String, val actorRef: Ac
       (get & path(Segment)) { ip =>
         actorRef ! Query("1")
         complete(IpInfo("hello"))
+      }
+    } ~ pathPrefix("job") {
+      post {
+        entity(as[Job]) { job =>
+          complete(job)
+        }
       }
     }
   }

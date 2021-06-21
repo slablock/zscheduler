@@ -5,7 +5,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 
 object BrokerConf extends CommonConf {
 
-  val FILE = "client.conf"
+  val FILE = "broker.conf"
   val ROLE = "cluster.roles"
 
   val config: Config = ConfigFactory.load(FILE)
