@@ -19,7 +19,7 @@ class BrokerServer {
   @LifecycleStart
   def start(): Unit = {
     val systemName = config.getString(BrokerConf.SYSTEM_NAME)
-    implicit val system: ActorSystem[Nothing] = ActorSystem[Nothing](Behaviors.setup[Nothing](context => {
+    ActorSystem[Nothing](Behaviors.setup[Nothing](context => {
       bootStrap(context)
       Behaviors.receiveSignal[Nothing] {
         case (_, Terminated(_)) =>
