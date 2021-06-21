@@ -14,7 +14,7 @@ class BrokerServer {
 
   @LifecycleStart
   def start(): Unit = {
-    val config = ConfigFactory.load()
+    val config = ConfigFactory.load("broker.conf")
       .withFallback(ConfigFactory.parseString(s"akka.cluster.roles = [${ClusterRole.BROKER}]"))
     val systemName = config.getString("zs.system")
     ActorSystem[BrokerMsg](BrokerActor(), systemName, config)
