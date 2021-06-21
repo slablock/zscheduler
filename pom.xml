@@ -181,12 +181,6 @@
 
             <dependency>
                 <groupId>com.typesafe.akka</groupId>
-                <artifactId>akka-http-spray-json_${scala.binary.version}</artifactId>
-                <version>${akka.http.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.typesafe.akka</groupId>
                 <artifactId>akka-actor-testkit-typed_${scala.binary.version}</artifactId>
                 <version>${akka.version}</version>
                 <scope>test</scope>
