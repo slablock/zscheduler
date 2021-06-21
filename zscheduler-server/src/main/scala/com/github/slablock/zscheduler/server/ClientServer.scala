@@ -6,7 +6,7 @@ import com.github.slablock.zcheduler.core.lifecycle.{LifecycleStart, LifecycleSt
 import org.slf4j.LoggerFactory
 import com.github.slablock.zscheduler.server.actor.ClientActor
 import com.github.slablock.zscheduler.server.client.ClientConf.config
-import com.github.slablock.zscheduler.server.client.{ClientConf, HttpServer}
+import com.github.slablock.zscheduler.server.client.ClientConf
 
 
 class ClientServer {
@@ -14,8 +14,7 @@ class ClientServer {
   private val LOGGER = LoggerFactory.getLogger(classOf[ClientServer])
 
   def bootStrap(context: ActorContext[Nothing]): Unit = {
-    val clientActor = context.spawn(ClientActor(), classOf[ClientActor].getSimpleName)
-    HttpServer(clientActor, context.system)
+    context.spawn(ClientActor(), classOf[ClientActor].getSimpleName)
   }
 
   @LifecycleStart
