@@ -4,16 +4,17 @@ import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import ClientProtocol.{IpInfo, Protocols}
 import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClientMsg, Query}
 import com.github.slablock.zscheduler.server.client.ClientConf.config
-import com.github.slablock.zscheduler.server.client.entity.Job
+import com.github.slablock.zscheduler.server.client.ClientProtocol.{IpInfo, Job}
+import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport
+import io.circe.generic.auto._
 
 import scala.concurrent.ExecutionContextExecutor
 
 
 class HttpServer private (val port: Int, val interface: String, val actorRef: ActorRef[ClientMsg],
-                          implicit val system: ActorSystem[Nothing]) extends Protocols {
+                          implicit val system: ActorSystem[Nothing]) extends ErrorAccumulatingCirceSupport {
 
   implicit val executor: ExecutionContextExecutor = system.executionContext
 
