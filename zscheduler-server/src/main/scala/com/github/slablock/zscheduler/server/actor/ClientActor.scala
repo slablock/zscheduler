@@ -63,7 +63,7 @@ class ClientActor(context: ActorContext[ClientMsg]) extends AbstractBehavior[Cli
           case Failure(ex) => {
             logger.info("", ex)
             ex match {
-              case TimeoutException =>
+              case _: TimeoutException =>
                 complete(StatusCodes.RequestTimeout -> ErrorResult(ex.getMessage))
               case _ =>
                 complete(StatusCodes.ServerError -> ErrorResult(ex.getMessage))

@@ -205,6 +205,30 @@
                 <version>0.11.3</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.typesafe.slick</groupId>
+                <artifactId>slick_${scala.binary.version}</artifactId>
+                <version>3.3.3</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.typesafe.slick</groupId>
+                <artifactId>slick-hikaricp_${scala.binary.version}</artifactId>
+                <version>3.3.3</version>
+            </dependency>
+
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>6.0.6</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.codingwell</groupId>
+                <artifactId>scala-guice_${scala.binary.version}</artifactId>
+                <version>5.0.1</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

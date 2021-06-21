@@ -77,6 +77,26 @@
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_2.13</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.typesafe.slick</groupId>
+            <artifactId>slick_${scala.binary.version}</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.typesafe.slick</groupId>
+            <artifactId>slick-hikaricp_${scala.binary.version}</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.codingwell</groupId>
+            <artifactId>scala-guice_${scala.binary.version}</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
