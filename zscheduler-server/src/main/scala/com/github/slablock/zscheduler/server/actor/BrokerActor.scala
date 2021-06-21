@@ -3,8 +3,8 @@ package com.github.slablock.zscheduler.server.actor
 import akka.actor.typed.Behavior
 import akka.actor.typed.receptionist.{Receptionist, ServiceKey}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
-import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerMsg, BrokerStatus}
-import com.github.slablock.zscheduler.server.actor.protos.clientActor.ClusterInfo
+import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerMsg, BrokerStatus, JobSubmitRequest}
+import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, JobSubmitResp}
 
 class BrokerActor(context: ActorContext[BrokerMsg]) extends AbstractBehavior[BrokerMsg](context) {
   override def onMessage(msg: BrokerMsg): Behavior[BrokerMsg] = {
@@ -12,6 +12,10 @@ class BrokerActor(context: ActorContext[BrokerMsg]) extends AbstractBehavior[Bro
       case BrokerStatus(sender) => {
         context.log.info("broker receive msg!!!")
         sender ! ClusterInfo("hello")
+        Behaviors.same
+      }
+      case JobSubmitRequest(name, jobType, content, user, sender) => {
+        sender ! JobSubmitResp(1L)
         Behaviors.same
       }
     }
