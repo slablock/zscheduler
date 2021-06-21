@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClientMsg, Query}
 import com.github.slablock.zscheduler.server.client.ClientConf.config
-import com.github.slablock.zscheduler.server.client.ClientProtocol.{IpInfo, Job}
+import com.github.slablock.zscheduler.server.client.ClientProtocol.{IpInfo, JobSubmit}
 import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport
 import io.circe.generic.auto._
 
@@ -28,7 +28,7 @@ class HttpServer private (val port: Int, val interface: String, val actorRef: Ac
       }
     } ~ pathPrefix("job") {
       post {
-        entity(as[Job]) { job =>
+        entity(as[JobSubmit]) { job =>
           complete(job)
         }
       }
