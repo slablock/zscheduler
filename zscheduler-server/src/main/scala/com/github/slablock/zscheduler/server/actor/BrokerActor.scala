@@ -8,7 +8,7 @@ import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterIn
 import com.github.slablock.zscheduler.server.actor.protos.workerActor.{TaskSubmitRequest, WorkerMsg}
 import com.github.slablock.zscheduler.server.broker.db.Job
 import com.github.slablock.zscheduler.server.broker.db.job.JobService
-import com.github.slablock.zscheduler.server.broker.guice.Injectors
+import com.github.slablock.zscheduler.server.guice.Injectors
 import net.codingwell.scalaguice.InjectorExtensions.ScalaInjector
 
 import scala.concurrent.ExecutionContext
@@ -16,7 +16,7 @@ import scala.util.{Failure, Success}
 
 class BrokerActor(context: ActorContext[BrokerMsg]) extends AbstractBehavior[BrokerMsg](context) {
 
-  private val jobService = Injectors.injector.instance[JobService]
+  private val jobService = Injectors.get().instance[JobService]
   implicit val executionContext: ExecutionContext = context.system.executionContext
   val worker: ActorRef[WorkerMsg] = context.spawn(Routers.group(WorkerActor.serviceKey).withRoundRobinRouting(), "worker-group")
 
