@@ -15,7 +15,7 @@ class WorkerActor(context: ActorContext[WorkerMsg]) extends AbstractBehavior[Wor
     msg match {
       case TaskSubmitRequest(fullId, taskName, taskType, content, user, sender) => {
         context.log.info("receive TaskSubmitRequest {}", fullId)
-        
+        context.spawn(TaskActor(), fullId)
         Behaviors.same
       }
     }

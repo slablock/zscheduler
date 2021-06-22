@@ -31,7 +31,7 @@ class BrokerActor(context: ActorContext[BrokerMsg]) extends AbstractBehavior[Bro
         jobService.addJob(Job(0, name, jobType, content, user))
           .onComplete({
             case Success(Job(jobId, _, _, _, _)) =>
-              worker ! TaskSubmitRequest("", name, jobType, content, user, context.self)
+              worker ! TaskSubmitRequest(s"$jobId", name, jobType, content, user, context.self)
               sender ! JobSubmitResp(jobId)
             case Failure(ex) =>
               sender ! JobSubmitResp(-1)
