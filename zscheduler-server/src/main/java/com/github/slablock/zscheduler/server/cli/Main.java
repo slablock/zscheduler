@@ -20,7 +20,10 @@ public class Main {
                 .withCommands(Help.class, Version.class);
 
         List<Class<? extends Runnable>> serverCommands = Arrays.asList(
-                CliBroker.class, CliClient.class
+                CliBroker.class,
+                CliClient.class,
+                CliWorker.class,
+                CliLogStorage.class
         );
         builder.withGroup("server")
                 .withDescription("Run one of the Druid server types.")

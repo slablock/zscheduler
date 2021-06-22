@@ -1,10 +1,11 @@
 package com.github.slablock.zscheduler.server.actor
 
-import akka.actor.typed.Behavior
+import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.receptionist.{Receptionist, ServiceKey}
-import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
+import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, Routers}
 import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerMsg, BrokerStatus, JobSubmitRequest}
 import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, JobSubmitResp}
+import com.github.slablock.zscheduler.server.actor.protos.workerActor.{TaskSubmitRequest, WorkerMsg}
 import com.github.slablock.zscheduler.server.broker.db.Job
 import com.github.slablock.zscheduler.server.broker.db.job.JobService
 import com.github.slablock.zscheduler.server.broker.guice.Injectors
@@ -17,6 +18,7 @@ class BrokerActor(context: ActorContext[BrokerMsg]) extends AbstractBehavior[Bro
 
   private val jobService = Injectors.injector.instance[JobService]
   implicit val executionContext: ExecutionContext = context.system.executionContext
+  val worker: ActorRef[WorkerMsg] = context.spawn(Routers.group(WorkerActor.serviceKey).withRoundRobinRouting(), "worker-group")
 
   override def onMessage(msg: BrokerMsg): Behavior[BrokerMsg] = {
     msg match {
@@ -29,6 +31,7 @@ class BrokerActor(context: ActorContext[BrokerMsg]) extends AbstractBehavior[Bro
         jobService.addJob(Job(0, name, jobType, content, user))
           .onComplete({
             case Success(Job(jobId, _, _, _, _)) =>
+              worker ! TaskSubmitRequest("", name, jobType, content, user, context.self)
               sender ! JobSubmitResp(jobId)
             case Failure(ex) =>
               sender ! JobSubmitResp(-1)

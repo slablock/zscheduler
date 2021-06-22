@@ -2,7 +2,7 @@ package com.github.slablock.zscheduler.server.cli;
 
 import com.github.slablock.zcheduler.core.guice.LifecycleModule;
 import com.github.slablock.zcheduler.core.guice.ManageLifecycle;
-import com.github.slablock.zscheduler.server.WorkerServer;
+import com.github.slablock.zscheduler.server.LogStorageServer;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Binder;
 import com.google.inject.Module;
@@ -12,12 +12,12 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-@Command(name = "worker", description = "Runs a worker node")
-public class CliWorker extends ServerRunnable {
+@Command(name = "logStorage", description = "Runs a logStorage node")
+public class CliLogStorage extends ServerRunnable {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CliWorker.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CliLogStorage.class);
 
-    public CliWorker() {
+    public CliLogStorage() {
         super(LOGGER);
     }
 
@@ -27,8 +27,8 @@ public class CliWorker extends ServerRunnable {
                 new Module() {
                     @Override
                     public void configure(Binder binder) {
-                        binder.bind(WorkerServer.class).in(ManageLifecycle.class);
-                        LifecycleModule.register(binder, WorkerServer.class);
+                        binder.bind(LogStorageServer.class).in(ManageLifecycle.class);
+                        LifecycleModule.register(binder, LogStorageServer.class);
                     }
                 }
         );

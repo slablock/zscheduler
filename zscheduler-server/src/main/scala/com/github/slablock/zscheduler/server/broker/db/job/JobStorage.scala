@@ -3,6 +3,7 @@ package com.github.slablock.zscheduler.server.broker.db.job
 
 import com.github.slablock.zscheduler.server.broker.db.Job
 import com.google.inject.Inject
+import slick.jdbc.TransactionIsolation
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -23,7 +24,7 @@ private [db] class JdbcJobStorage @Inject()(val table: JobTable) extends JobStor
 
   override def saveJob(job: Job)(implicit executionContext: ExecutionContext): Future[Job] = {
     val action = insertQuery += job
-    db.run(action)
+    db.run(action.withTransactionIsolation(TransactionIsolation.ReadCommitted).transactionally)
   }
 
 }
