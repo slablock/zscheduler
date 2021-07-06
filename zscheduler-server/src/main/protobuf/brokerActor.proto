@@ -32,11 +32,13 @@ message BrokerMsg {
 
 
 message JobSubmitRequest {
-    string name = 1;
+    string jobName = 1;
     int32 jobType = 2;
-    string content = 3;
-    string user = 4;
-    ClientActorRef client = 5;
+    int32 contentType = 3;
+    string content = 4;
+    string user = 5;
+    int32 priority = 6;
+    ClientActorRef client = 7;
 }
 
 message JobQueryStatusRequest {

@@ -97,6 +97,12 @@
             <groupId>net.codingwell</groupId>
             <artifactId>scala-guice_${scala.binary.version}</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.jgrapht</groupId>
+            <artifactId>jgrapht-core</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>
