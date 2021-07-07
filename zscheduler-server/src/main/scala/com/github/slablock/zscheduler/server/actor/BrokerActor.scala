@@ -22,9 +22,9 @@ class BrokerActor(context: ActorContext[BrokerMsg]) extends AbstractBehavior[Bro
 
   override def onMessage(msg: BrokerMsg): Behavior[BrokerMsg] = {
     msg match {
-      case BrokerStatus(sender) => {
+      case BrokerStatus(client) => {
         context.log.info("broker receive msg!!!")
-        sender ! ClusterInfo("hello")
+        client ! ClusterInfo("hello")
         Behaviors.same
       }
       case JobSubmitRequest(jobName, jobType, contentType, content, user, priority, sender) => {

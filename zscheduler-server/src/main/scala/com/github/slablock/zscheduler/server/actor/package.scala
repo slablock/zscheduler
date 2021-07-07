@@ -1,36 +1,27 @@
 package com.github.slablock.zscheduler.server
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, typed}
 import akka.actor.typed.scaladsl.adapter.ClassicActorSystemOps
 import akka.actor.typed.{ActorRef, ActorRefResolver}
 import akka.serialization.Serialization
-import com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg
-import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerMsg, ClientActorRef}
-import com.github.slablock.zscheduler.server.actor.protos.workerActor.BrokerActorRef
+import org.apache.commons.lang3.StringUtils
 import scalapb.TypeMapper
-
 
 package object actor {
 
   val system: ActorSystem = Serialization.getCurrentTransportInformation().system
-  val refResolver: ActorRefResolver = ActorRefResolver(system.toTyped)
+  val typedSystem: typed.ActorSystem[Nothing] = system.toTyped
+  val refResolver: ActorRefResolver = ActorRefResolver(typedSystem)
 
-  implicit val clientActorRefMapper: TypeMapper[ClientActorRef, ActorRef[ClientMsg]] =
-    TypeMapper[ClientActorRef, ActorRef[ClientMsg]](
-      refData => {
-      refResolver.resolveActorRef[ClientMsg](refData.path)
-    })(ref => {
-      val path = refResolver.toSerializationFormat(ref)
-      ClientActorRef(path)
-    })
-
-  implicit val brokerActorRefMapper: TypeMapper[BrokerActorRef, ActorRef[BrokerMsg]] =
-    TypeMapper[BrokerActorRef, ActorRef[BrokerMsg]](
-      refData => {
-        refResolver.resolveActorRef[BrokerMsg](refData.path)
-      })(ref => {
-      val path = refResolver.toSerializationFormat(ref)
-      BrokerActorRef(path)
-    })
-
+  implicit def actorRefMapper[T]: TypeMapper[String, ActorRef[T]] = {
+    TypeMapper[String, ActorRef[T]] { str =>
+      if (StringUtils.isBlank(str)) typedSystem.deadLetters[T]
+      else refResolver.resolveActorRef[T](str)
+    } { ref =>
+      ref.path.elements match {
+        case List("deadLetters") => "" // resolver.toSerializationFormat(ActorSystemUtils.system.deadLetters[T])
+        case _                   => refResolver.toSerializationFormat(ref)
+      }
+    }
+  }
 }

@@ -38,22 +38,22 @@ message JobSubmitRequest {
     string content = 4;
     string user = 5;
     int32 priority = 6;
-    ClientActorRef client = 7;
+    string client = 7 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg]"];
 }
 
 message JobQueryStatusRequest {
     int64 jobId = 1;
-    ClientActorRef client = 2;
+    string client = 2 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg]"];
 }
 
 message JobQueryLogRequest {
     int64 jobId = 1;
     int32 logType = 2;
-    ClientActorRef client = 3;
+    string client = 3 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg]"];
 }
 
 message BrokerStatus {
-    ClientActorRef sender = 2;
+    string client = 1 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg]"];
 }
 
 message SubmitTaskResp {
@@ -66,10 +66,4 @@ message SubmitTaskResp {
 message KillTaskResp {
     bool success = 1;
     string message = 2;
-}
-
-message ClientActorRef {
-    option (scalapb.message).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg]";
-    option (scalapb.message).no_box = true;
-    string path = 1;
 }
