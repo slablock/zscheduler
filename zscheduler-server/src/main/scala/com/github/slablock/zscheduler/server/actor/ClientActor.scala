@@ -58,7 +58,7 @@ class ClientActor(context: ActorContext[ClientMsg]) extends AbstractBehavior[Cli
   } ~ pathPrefix("job") {
     post {
       entity(as[JobSubmit]) { job =>
-        onComplete(broker.ask(ref => JobSubmitRequest(job.jobName, job.jobType, job.contentType, job.content, job.user, job.priority, ref))) {
+        onComplete(broker.ask(ref => JobSubmitRequest(job.jobName, job.jobType, job.contentType, job.content, job.user, job.priority, Seq(), Seq(), ref))) {
           case Success(JobSubmitResp(jobId)) => complete(JobSubmitted(jobId))
           case Failure(ex) => {
             logger.info("", ex)

@@ -30,6 +30,16 @@ message BrokerMsg {
     }
 }
 
+message ScheduleExpression {
+    int32 scheduleType = 1; // cron、fix delay 、fix rate 、iso8601
+    string expression = 2;
+}
+
+message DependencyExpression {
+    int64 jobId = 1;
+    string rangeExpression = 2;
+    string offsetExpression = 3;
+}
 
 message JobSubmitRequest {
     string jobName = 1;
@@ -38,7 +48,9 @@ message JobSubmitRequest {
     string content = 4;
     string user = 5;
     int32 priority = 6;
-    string client = 7 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg]"];
+    repeated ScheduleExpression schedule = 7;
+    repeated DependencyExpression dependency = 8;
+    string client = 9 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg]"];
 }
 
 message JobQueryStatusRequest {

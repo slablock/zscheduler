@@ -27,7 +27,7 @@ class BrokerActor(context: ActorContext[BrokerMsg]) extends AbstractBehavior[Bro
         client ! ClusterInfo("hello")
         Behaviors.same
       }
-      case JobSubmitRequest(jobName, jobType, contentType, content, user, priority, sender) => {
+      case JobSubmitRequest(jobName, jobType, contentType, content, user, priority, Seq(), Seq(), sender) => {
         jobService.addJob(Job(0, jobName, jobType, content, user))
           .onComplete({
             case Success(Job(jobId, _, _, _, _)) =>
