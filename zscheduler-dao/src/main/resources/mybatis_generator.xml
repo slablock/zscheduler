@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE generatorConfiguration PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN" "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd" >
+<generatorConfiguration>
+
+	<context id="zscheduler" targetRuntime="MyBatis3">
+		<commentGenerator>
+			<property name="suppressDate" value="true" />
+			<property name="suppressAllComments" value="true" />
+		</commentGenerator>
+
+		<jdbcConnection driverClass="com.mysql.jdbc.Driver" connectionURL="jdbc:mysql://127.0.0.1/zscheduler?nullCatalogMeansCurrent=true" userId="root" password="root" />
+
+		<javaModelGenerator targetPackage="com.github.slablock.zscheduler.dao.dto.generate" targetProject="src/main/java" />
+		<sqlMapGenerator targetPackage="com.github.slablock.zscheduler.dao.mapper.generate" targetProject="src/main/resources" />
+		<javaClientGenerator targetPackage="com.github.slablock.zscheduler.dao.mapper.generate" targetProject="src/main/java" type="XMLMAPPER" />
+
+		<table schema="zscheduler" tableName="project">
+			<property name="useActualColumnNames" value="true" />
+			<generatedKey column="projectId" sqlStatement="MySql" identity="true" />
+		</table>
+
+		<table schema="zscheduler" tableName="flow">
+			<property name="useActualColumnNames" value="true" />
+			<generatedKey column="flowId" sqlStatement="MySql" identity="true" />
+		</table>
+
+		<table schema="zscheduler" tableName="job">
+			<property name="useActualColumnNames" value="true" />
+			<generatedKey column="jobId" sqlStatement="MySql" identity="true" />
+		</table>
+
+		<table schema="zscheduler" tableName="flow_dependency">
+			<property name="useActualColumnNames" value="true" />
+			<generatedKey column="id" sqlStatement="MySql" identity="true" />
+		</table>
+
+		<table schema="zscheduler" tableName="job_dependency">
+			<property name="useActualColumnNames" value="true" />
+			<generatedKey column="id" sqlStatement="MySql" identity="true" />
+		</table>
+
+		<table schema="zscheduler" tableName="flow_schedule">
+			<property name="useActualColumnNames" value="true" />
+			<generatedKey column="id" sqlStatement="MySql" identity="true" />
+		</table>
+
+		<table schema="zscheduler" tableName="task">
+			<property name="useActualColumnNames" value="true" />
+			<generatedKey column="taskId" sqlStatement="MySql" identity="true" />
+		</table>
+
+		<table schema="zscheduler" tableName="execution_flow">
+			<property name="useActualColumnNames" value="true" />
+			<generatedKey column="execId" sqlStatement="MySql" identity="true" />
+		</table>
+	</context>
+</generatorConfiguration>

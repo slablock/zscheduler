@@ -12,6 +12,7 @@
     <modules>
         <module>zscheduler-core</module>
         <module>zscheduler-server</module>
+        <module>zscheduler-dao</module>
     </modules>
 
     <properties>
@@ -235,6 +236,22 @@
                 <version>1.5.1</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.zaxxer</groupId>
+                <artifactId>HikariCP</artifactId>
+                <version>4.0.3</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis</artifactId>
+                <version>3.5.7</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis-guice</artifactId>
+                <version>3.12</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
