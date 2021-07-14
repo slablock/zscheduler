@@ -3,7 +3,9 @@ package com.github.slablock.zscheduler.server.cli;
 import com.github.slablock.zcheduler.core.guice.LifecycleModule;
 import com.github.slablock.zcheduler.core.guice.ManageLifecycle;
 import com.github.slablock.zscheduler.server.BrokerServer;
+import com.github.slablock.zscheduler.server.broker.BrokerConf;
 import com.github.slablock.zscheduler.server.broker.db.guice.StorageModule;
+import com.github.slablock.zscheduler.server.guice.ZSMyBatisModule;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Binder;
 import com.google.inject.Module;
@@ -25,6 +27,7 @@ public class CliBroker extends ServerRunnable {
     @Override
     protected List<? extends Module> getModules() {
         return ImmutableList.of(
+                new ZSMyBatisModule(BrokerConf.config()),
                 new StorageModule(),
                 new Module() {
                     @Override
