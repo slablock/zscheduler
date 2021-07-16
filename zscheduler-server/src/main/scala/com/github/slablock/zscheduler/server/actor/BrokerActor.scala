@@ -29,9 +29,9 @@ class BrokerActor(context: ActorContext[BrokerMsg]) extends AbstractBehavior[Bro
         client ! ClusterInfo("hello")
         Behaviors.same
       }
-      case JobSubmitRequest(jobName, jobType, contentType, content, user, priority, Seq(), Seq(), sender) => {
+      case JobSubmitRequest(projectId, jobName, jobType, contentType, content, params, priority, user, Seq(), sender) => {
         val time = new Timestamp(DateTime.now().getMillis)
-        jobService.addJob(JobRow(0, 0, jobName, jobType, contentType, content, "", priority, user, user, time, time))
+        jobService.addJob(JobRow(0, projectId, jobName, jobType, contentType, content, params, priority, user, user, time, time))
           .onComplete({
             case Success(JobRow(jobId,_,_,_,_,_,_,_,_,_,_,_)) =>
               worker ! TaskSubmitRequest(s"$jobId", jobName, jobType, content, user, context.self)
