@@ -119,19 +119,21 @@ trait Tables {
    *  @param preProjectId Database column preProjectId SqlType(BIGINT UNSIGNED), Default(0)
    *  @param preFlowId Database column preFlowId SqlType(BIGINT UNSIGNED), Default(0)
    *  @param preJobId Database column preJobId SqlType(BIGINT), Default(0)
+   *  @param rangeExpression Database column rangeExpression SqlType(VARCHAR), Length(1024,true), Default()
+   *  @param offsetExpression Database column offsetExpression SqlType(VARCHAR), Length(1024,true), Default()
    *  @param createTime Database column createTime SqlType(DATETIME)
    *  @param updateTime Database column updateTime SqlType(DATETIME) */
-  case class FlowDependencyRow(id: Long, projectId: Long = 0L, flowId: Long = 0L, preProjectId: Long = 0L, preFlowId: Long = 0L, preJobId: Long = 0L, createTime: java.sql.Timestamp, updateTime: java.sql.Timestamp)
+  case class FlowDependencyRow(id: Long, projectId: Long = 0L, flowId: Long = 0L, preProjectId: Long = 0L, preFlowId: Long = 0L, preJobId: Long = 0L, rangeExpression: String = "", offsetExpression: String = "", createTime: java.sql.Timestamp, updateTime: java.sql.Timestamp)
   /** GetResult implicit for fetching FlowDependencyRow objects using plain SQL queries */
-  implicit def GetResultFlowDependencyRow(implicit e0: GR[Long], e1: GR[java.sql.Timestamp]): GR[FlowDependencyRow] = GR{
+  implicit def GetResultFlowDependencyRow(implicit e0: GR[Long], e1: GR[String], e2: GR[java.sql.Timestamp]): GR[FlowDependencyRow] = GR{
     prs => import prs._
-    FlowDependencyRow.tupled((<<[Long], <<[Long], <<[Long], <<[Long], <<[Long], <<[Long], <<[java.sql.Timestamp], <<[java.sql.Timestamp]))
+    FlowDependencyRow.tupled((<<[Long], <<[Long], <<[Long], <<[Long], <<[Long], <<[Long], <<[String], <<[String], <<[java.sql.Timestamp], <<[java.sql.Timestamp]))
   }
   /** Table description of table flow_dependency. Objects of this class serve as prototypes for rows in queries. */
   class FlowDependency(_tableTag: Tag) extends profile.api.Table[FlowDependencyRow](_tableTag, Some("zscheduler"), "flow_dependency") {
-    def * = (id, projectId, flowId, preProjectId, preFlowId, preJobId, createTime, updateTime) <> (FlowDependencyRow.tupled, FlowDependencyRow.unapply)
+    def * = (id, projectId, flowId, preProjectId, preFlowId, preJobId, rangeExpression, offsetExpression, createTime, updateTime) <> (FlowDependencyRow.tupled, FlowDependencyRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(id), Rep.Some(projectId), Rep.Some(flowId), Rep.Some(preProjectId), Rep.Some(preFlowId), Rep.Some(preJobId), Rep.Some(createTime), Rep.Some(updateTime))).shaped.<>({r=>import r._; _1.map(_=> FlowDependencyRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = ((Rep.Some(id), Rep.Some(projectId), Rep.Some(flowId), Rep.Some(preProjectId), Rep.Some(preFlowId), Rep.Some(preJobId), Rep.Some(rangeExpression), Rep.Some(offsetExpression), Rep.Some(createTime), Rep.Some(updateTime))).shaped.<>({r=>import r._; _1.map(_=> FlowDependencyRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(BIGINT UNSIGNED), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)
@@ -145,6 +147,10 @@ trait Tables {
     val preFlowId: Rep[Long] = column[Long]("preFlowId", O.Default(0L))
     /** Database column preJobId SqlType(BIGINT), Default(0) */
     val preJobId: Rep[Long] = column[Long]("preJobId", O.Default(0L))
+    /** Database column rangeExpression SqlType(VARCHAR), Length(1024,true), Default() */
+    val rangeExpression: Rep[String] = column[String]("rangeExpression", O.Length(1024,varying=true), O.Default(""))
+    /** Database column offsetExpression SqlType(VARCHAR), Length(1024,true), Default() */
+    val offsetExpression: Rep[String] = column[String]("offsetExpression", O.Length(1024,varying=true), O.Default(""))
     /** Database column createTime SqlType(DATETIME) */
     val createTime: Rep[java.sql.Timestamp] = column[java.sql.Timestamp]("createTime")
     /** Database column updateTime SqlType(DATETIME) */
@@ -255,19 +261,21 @@ trait Tables {
    *  @param preProjectId Database column preProjectId SqlType(BIGINT UNSIGNED), Default(0)
    *  @param preFlowId Database column preFlowId SqlType(BIGINT UNSIGNED), Default(0)
    *  @param preJobId Database column preJobId SqlType(BIGINT), Default(0)
+   *  @param rangeExpression Database column rangeExpression SqlType(VARCHAR), Length(1024,true), Default()
+   *  @param offsetExpression Database column offsetExpression SqlType(VARCHAR), Length(1024,true), Default()
    *  @param createTime Database column createTime SqlType(DATETIME)
    *  @param updateTime Database column updateTime SqlType(DATETIME) */
-  case class JobDependencyRow(id: Long, projectId: Long = 0L, flowId: Long = 0L, jobId: Long = 0L, preProjectId: Long = 0L, preFlowId: Long = 0L, preJobId: Long = 0L, createTime: java.sql.Timestamp, updateTime: java.sql.Timestamp)
+  case class JobDependencyRow(id: Long, projectId: Long = 0L, flowId: Long = 0L, jobId: Long = 0L, preProjectId: Long = 0L, preFlowId: Long = 0L, preJobId: Long = 0L, rangeExpression: String = "", offsetExpression: String = "", createTime: java.sql.Timestamp, updateTime: java.sql.Timestamp)
   /** GetResult implicit for fetching JobDependencyRow objects using plain SQL queries */
-  implicit def GetResultJobDependencyRow(implicit e0: GR[Long], e1: GR[java.sql.Timestamp]): GR[JobDependencyRow] = GR{
+  implicit def GetResultJobDependencyRow(implicit e0: GR[Long], e1: GR[String], e2: GR[java.sql.Timestamp]): GR[JobDependencyRow] = GR{
     prs => import prs._
-    JobDependencyRow.tupled((<<[Long], <<[Long], <<[Long], <<[Long], <<[Long], <<[Long], <<[Long], <<[java.sql.Timestamp], <<[java.sql.Timestamp]))
+    JobDependencyRow.tupled((<<[Long], <<[Long], <<[Long], <<[Long], <<[Long], <<[Long], <<[Long], <<[String], <<[String], <<[java.sql.Timestamp], <<[java.sql.Timestamp]))
   }
   /** Table description of table job_dependency. Objects of this class serve as prototypes for rows in queries. */
   class JobDependency(_tableTag: Tag) extends profile.api.Table[JobDependencyRow](_tableTag, Some("zscheduler"), "job_dependency") {
-    def * = (id, projectId, flowId, jobId, preProjectId, preFlowId, preJobId, createTime, updateTime) <> (JobDependencyRow.tupled, JobDependencyRow.unapply)
+    def * = (id, projectId, flowId, jobId, preProjectId, preFlowId, preJobId, rangeExpression, offsetExpression, createTime, updateTime) <> (JobDependencyRow.tupled, JobDependencyRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(id), Rep.Some(projectId), Rep.Some(flowId), Rep.Some(jobId), Rep.Some(preProjectId), Rep.Some(preFlowId), Rep.Some(preJobId), Rep.Some(createTime), Rep.Some(updateTime))).shaped.<>({r=>import r._; _1.map(_=> JobDependencyRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = ((Rep.Some(id), Rep.Some(projectId), Rep.Some(flowId), Rep.Some(jobId), Rep.Some(preProjectId), Rep.Some(preFlowId), Rep.Some(preJobId), Rep.Some(rangeExpression), Rep.Some(offsetExpression), Rep.Some(createTime), Rep.Some(updateTime))).shaped.<>({r=>import r._; _1.map(_=> JobDependencyRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10.get, _11.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(BIGINT UNSIGNED), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)
@@ -283,6 +291,10 @@ trait Tables {
     val preFlowId: Rep[Long] = column[Long]("preFlowId", O.Default(0L))
     /** Database column preJobId SqlType(BIGINT), Default(0) */
     val preJobId: Rep[Long] = column[Long]("preJobId", O.Default(0L))
+    /** Database column rangeExpression SqlType(VARCHAR), Length(1024,true), Default() */
+    val rangeExpression: Rep[String] = column[String]("rangeExpression", O.Length(1024,varying=true), O.Default(""))
+    /** Database column offsetExpression SqlType(VARCHAR), Length(1024,true), Default() */
+    val offsetExpression: Rep[String] = column[String]("offsetExpression", O.Length(1024,varying=true), O.Default(""))
     /** Database column createTime SqlType(DATETIME) */
     val createTime: Rep[java.sql.Timestamp] = column[java.sql.Timestamp]("createTime")
     /** Database column updateTime SqlType(DATETIME) */

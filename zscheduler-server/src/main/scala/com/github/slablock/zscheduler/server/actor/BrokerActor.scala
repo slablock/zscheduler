@@ -31,7 +31,7 @@ class BrokerActor(context: ActorContext[BrokerMsg]) extends AbstractBehavior[Bro
       }
       case JobSubmitRequest(jobName, jobType, contentType, content, user, priority, Seq(), Seq(), sender) => {
         val time = new Timestamp(DateTime.now().getMillis)
-        jobService.addJob(JobRow(0, 0, jobName, jobType, 0, content, "", 1, user, user, time, time))
+        jobService.addJob(JobRow(0, 0, jobName, jobType, contentType, content, "", priority, user, user, time, time))
           .onComplete({
             case Success(JobRow(jobId,_,_,_,_,_,_,_,_,_,_,_)) =>
               worker ! TaskSubmitRequest(s"$jobId", jobName, jobType, content, user, context.self)

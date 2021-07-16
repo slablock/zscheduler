@@ -48,6 +48,8 @@ create table `flow_dependency` (
     `preProjectId` bigint(11) unsigned not null default '0' comment '前置项目ID',
     `preFlowId` bigint(11) unsigned not null default '0' comment '前置流ID',
     `preJobId` bigint(11) not null default '0' comment '前置任务ID，如果为-1标识依赖流',
+    `rangeExpression` varchar(1024) not null default '' comment 'range',
+    `offsetExpression` varchar(1024) not null default '' comment 'offset',
     `createTime` datetime NOT NULL COMMENT '创建时间',
     `updateTime` datetime NOT NULL COMMENT '最后更新时间',
 PRIMARY KEY (`id`)
@@ -62,6 +64,8 @@ create table `job_dependency` (
     `preProjectId` bigint(11) unsigned not null default '0' comment '前置项目ID',
     `preFlowId` bigint(11) unsigned not null default '0' comment '前置流ID',
     `preJobId` bigint(11) not null default '0' comment '前置任务ID，如果为-1标识依赖流',
+    `rangeExpression` varchar(1024) not null default '' comment 'range',
+    `offsetExpression` varchar(1024) not null default '' comment 'offset',
     `createTime` datetime NOT NULL COMMENT '创建时间',
     `updateTime` datetime NOT NULL COMMENT '最后更新时间',
     PRIMARY KEY (`id`)
