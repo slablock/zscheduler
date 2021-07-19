@@ -222,6 +222,18 @@
                 <groupId>com.typesafe.slick</groupId>
                 <artifactId>slick-hikaricp_${scala.binary.version}</artifactId>
                 <version>3.3.3</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.zaxxer</groupId>
+                        <artifactId>HikariCP</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.zaxxer</groupId>
+                <artifactId>HikariCP</artifactId>
+                <version>4.0.3</version>
             </dependency>
 
             <dependency>

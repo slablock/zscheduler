@@ -25,6 +25,10 @@
             <artifactId>slick-hikaricp_${scala.binary.version}</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.typesafe.slick</groupId>
             <artifactId>slick-codegen_${scala.binary.version}</artifactId>
         </dependency>
