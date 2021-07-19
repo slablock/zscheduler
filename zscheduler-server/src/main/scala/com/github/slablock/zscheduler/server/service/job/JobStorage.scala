@@ -1,6 +1,5 @@
 package com.github.slablock.zscheduler.server.service.job
 
-import com.github.slablock.zscheduler.dao.Tables
 import com.github.slablock.zscheduler.dao.Tables._
 import com.github.slablock.zscheduler.server.service.ZSDbComponent
 import com.google.inject.Inject
@@ -14,7 +13,7 @@ trait JobStorage {
 }
 
 
-private [service] class JdbcJobStorage @Inject()(val dbComponent: ZSDbComponent, val tables: Tables) extends JobStorage {
+private [service] class JdbcJobStorage @Inject()(val dbComponent: ZSDbComponent) extends JobStorage {
   import dbComponent._
   import profile.api._
 
