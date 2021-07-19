@@ -29,17 +29,19 @@ message WorkerMsg {
 }
 
 message TaskSubmitRequest {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.WorkerActor.WorkerCommand";
     string fullId = 1;
     string taskName = 2;
     int32 taskType = 3;
     string content = 4;
     string user = 5;
-    string broker = 6 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.brokerActor.BrokerMsg]"];
+    string sender = 6 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand]"];
 }
 
 message TaskKillRequest {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.WorkerActor.WorkerCommand";
     string fullId = 1;
     int32 taskType = 2;
     string user = 3;
-    string broker = 4 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.brokerActor.BrokerMsg]"];
+    string sender = 4 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand]"];
 }

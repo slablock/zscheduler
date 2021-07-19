@@ -32,24 +32,29 @@ message ClientMsg {
 
 
 message ClusterInfo {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
     string data = 1;
 }
 
 message Query {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
     string id = 1;
 }
 
 message JobSubmitResp {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
     int64 jobId = 1;
 }
 
 
 message JobQueryStatusResp {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
     int64 jobId = 1;
     int32 status = 2;
 }
 
 message JobQueryLogResp {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
     int64 jobId = 1;
     int32 logType = 2;
     string log = 3;

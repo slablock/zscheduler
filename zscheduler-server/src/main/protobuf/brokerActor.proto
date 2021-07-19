@@ -44,29 +44,33 @@ message DependencyExpression {
 }
 
 message ProjectSubmitRequest {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand";
     string projectName = 1;
     string user = 2;
-    string client = 3 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg]"];
+    string sender = 3 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand]"];
 }
 
 message ProjectUpdateRequest {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand";
     int64 projectId = 1;
     string projectName = 2;
     string user = 3;
     string updateUser = 4;
-    string client = 5 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg]"];
+    string sender = 5 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand]"];
 }
 
 message FlowSubmitRequest {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand";
     int64 projectId = 1;
     string flowName = 2;
     string user = 3;
     repeated DependencyExpression dependencies = 4;
     repeated ScheduleExpression schedules = 5;
-    string client = 6 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg]"];
+    string sender = 6 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand]"];
 }
 
 message FlowUpdateRequest {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand";
     int64 flowId = 1;
     int64 projectId = 2;
     string flowName = 3;
@@ -74,10 +78,11 @@ message FlowUpdateRequest {
     string updateUser = 5;
     repeated DependencyExpression dependencies = 6;
     repeated ScheduleExpression schedules = 7;
-    string client = 8 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg]"];
+    string sender = 8 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand]"];
 }
 
 message JobSubmitRequest {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand";
     int64 projectId = 1;
     string jobName = 2;
     int32 jobType = 3;
@@ -87,10 +92,11 @@ message JobSubmitRequest {
     int32 priority = 7;
     string user = 8;
     repeated DependencyExpression dependencies = 9;
-    string client = 10 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg]"];
+    string sender = 10 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand]"];
 }
 
 message JobUpdateRequest {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand";
     int64 jobId = 1;
     int64 projectId = 2;
     string jobName = 3;
@@ -101,26 +107,30 @@ message JobUpdateRequest {
     int32 priority = 8;
     string user = 9;
     repeated DependencyExpression dependencies = 10;
-    string client = 11 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg]"];
+    string sender = 11 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand]"];
 }
 
 
 message JobQueryStatusRequest {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand";
     int64 jobId = 1;
-    string client = 2 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg]"];
+    string sender = 2 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand]"];
 }
 
 message JobQueryLogRequest {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand";
     int64 jobId = 1;
     int32 logType = 2;
-    string client = 3 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg]"];
+    string sender = 3 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand]"];
 }
 
 message BrokerStatus {
-    string client = 1 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.protos.clientActor.ClientMsg]"];
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand";
+    string sender = 1 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand]"];
 }
 
 message SubmitTaskResp {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand";
     bool accept = 1;
     bool success = 2;
     string message = 3;
@@ -128,6 +138,7 @@ message SubmitTaskResp {
 }
 
 message KillTaskResp {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand";
     bool success = 1;
     string message = 2;
 }

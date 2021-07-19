@@ -1,42 +1,47 @@
 package com.github.slablock.zscheduler.server.actor
 
-import akka.actor.typed.scaladsl.AskPattern.Askable
-import akka.actor.typed.{ActorRef, ActorSystem, Behavior, Scheduler}
+import akka.actor.typed.{ActorRef, ActorSystem, Behavior, PostStop, Scheduler}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, Routers}
-import akka.http.scaladsl.server.Directives.entity
-import akka.util.Timeout
-import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerMsg, BrokerStatus, JobSubmitRequest}
-import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClientMsg, ClusterInfo, JobSubmitResp, Query}
+import com.github.slablock.zscheduler.server.actor.protos.brokerActor.BrokerStatus
+import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, JobSubmitResp, Query}
 
-import java.util.concurrent.{TimeUnit, TimeoutException}
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.StatusCodes
-import io.circe.generic.auto._
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
-import com.github.slablock.zscheduler.server.client.ClientConf
+import akka.http.scaladsl.Http.ServerBinding
+import com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand
+import com.github.slablock.zscheduler.server.actor.ClientActor.{ClientCommand, StartFailed, Started, Stop}
+import com.github.slablock.zscheduler.server.client.{ClientConf, ClientRoutes}
 import com.github.slablock.zscheduler.server.client.ClientConf.config
-import com.github.slablock.zscheduler.server.client.ClientProtocol.{ErrorResult, IpInfo, JobSubmit, JobSubmitted}
-import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport
-import org.slf4j.LoggerFactory
 
-import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 
-class ClientActor(context: ActorContext[ClientMsg]) extends AbstractBehavior[ClientMsg](context) with ErrorAccumulatingCirceSupport {
+class ClientActor(context: ActorContext[ClientCommand]) extends AbstractBehavior[ClientCommand](context) {
 
-  private val logger = LoggerFactory.getLogger(classOf[ClientActor])
   implicit val system: ActorSystem[Nothing] = context.system
-  implicit val timeout: Timeout = Timeout(10, TimeUnit.SECONDS)
-  implicit val scheduler: Scheduler = context.system.scheduler
-  implicit val executionContext: ExecutionContextExecutor = context.system.executionContext
-  val broker: ActorRef[BrokerMsg] = context.spawn(Routers.group(BrokerActor.serviceKey).withRoundRobinRouting(), "broker-group")
+  val broker: ActorRef[BrokerCommand] = context.spawn(Routers.group(BrokerActor.serviceKey).withRoundRobinRouting(), "broker-group")
 
-  Http().newServerAt(config.getString(ClientConf.INTERFACE), config.getInt(ClientConf.PORT)).bind(route())
+  val serverBinding: Future[Http.ServerBinding] =
+    Http().newServerAt(config.getString(ClientConf.INTERFACE), config.getInt(ClientConf.PORT))
+      .bind((new ClientRoutes(broker)).routes)
 
-  override def onMessage(msg: ClientMsg): Behavior[ClientMsg] = {
-    msg match {
+  context.pipeToSelf(serverBinding) {
+    case Success(binding) => Started(binding)
+    case Failure(ex)      => StartFailed(ex)
+  }
+
+  override def onMessage(msg: ClientCommand): Behavior[ClientCommand] = {
+    starting(wasStopped = false)
+  }
+
+  def running(binding: ServerBinding): Behavior[ClientCommand] =
+    Behaviors.receiveMessagePartial[ClientCommand] {
+      case Stop =>
+        context.log.info(
+          "Stopping server http://{}:{}/",
+          binding.localAddress.getHostString,
+          binding.localAddress.getPort)
+        Behaviors.stopped
       case msg: Query =>
         context.log.info("client receive msg: {}", msg.id)
         broker ! BrokerStatus(context.self)
@@ -47,40 +52,38 @@ class ClientActor(context: ActorContext[ClientMsg]) extends AbstractBehavior[Cli
       case JobSubmitResp(jobId) => {
         Behaviors.same
       }
+    }.receiveSignal {
+      case (_, PostStop) =>
+        binding.unbind()
+        Behaviors.same
     }
-  }
 
-  def route(): Route = pathPrefix("ip") {
-    (get & path(Segment)) { ip =>
-      context.self ! Query("1")
-      complete(IpInfo("hello"))
+  def starting(wasStopped: Boolean): Behaviors.Receive[ClientCommand] =
+    Behaviors.receiveMessage[ClientCommand] {
+      case StartFailed(cause) =>
+        throw new RuntimeException("Server failed to start", cause)
+      case Started(binding) =>
+        context.log.info(
+          "Server online at http://{}:{}/",
+          binding.localAddress.getHostString,
+          binding.localAddress.getPort)
+        if (wasStopped) context.self ! Stop
+        running(binding)
+      case Stop =>
+        // we got a stop message but haven't completed starting yet,
+        // we cannot stop until starting has completed
+        starting(wasStopped = true)
     }
-  } ~ pathPrefix("job") {
-    post {
-      entity(as[JobSubmit]) { job =>
-        onComplete(broker.ask(ref => JobSubmitRequest(0, job.jobName, job.jobType, job.contentType,
-          job.content, "", job.priority, job.user, Seq(), ref))) {
-          case Success(JobSubmitResp(jobId)) => complete(JobSubmitted(jobId))
-          case Failure(ex) => {
-            logger.info("", ex)
-            ex match {
-              case _: TimeoutException =>
-                complete(StatusCodes.RequestTimeout -> ErrorResult(ex.getMessage))
-              case _ =>
-                complete(StatusCodes.ServerError -> ErrorResult(ex.getMessage))
-            }
-          }
-        }
-      }
-    }
-  }
-
 }
 
 object ClientActor {
 
-  def apply(): Behavior[ClientMsg] = Behaviors.setup[ClientMsg](context => {
-    context.spawn(ClusterListenerActor(), "lister")
+  trait ClientCommand
+  private final case class StartFailed(cause: Throwable) extends ClientCommand
+  private final case class Started(binding: ServerBinding) extends ClientCommand
+  case object Stop extends ClientCommand
+
+  def apply(): Behavior[ClientCommand] = Behaviors.setup[ClientCommand](context => {
     new ClientActor(context)
   })
 
