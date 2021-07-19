@@ -6,9 +6,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand
-import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerStatus, JobSubmitRequest}
-import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, JobSubmitResp}
-import com.github.slablock.zscheduler.server.client.ClientProtocol.{ErrorResult, JobSubmit, JobSubmitted}
+import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerStatus, DependencyExpression, FlowSubmitRequest, JobSubmitRequest, ProjectSubmitRequest, ScheduleExpression}
+import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, JobSubmitResp, ProjectSubmitResp}
+import com.github.slablock.zscheduler.server.client.ClientProtocol.{FlowSubmit, JobSubmit, ProjectSubmit, errorResult, successResult}
 import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport
 import io.circe.generic.auto._
 import org.slf4j.{Logger, LoggerFactory}
@@ -34,7 +34,7 @@ class ClientRoutes(broker: ActorRef[BrokerCommand])(implicit system: ActorSystem
       }
       }
     } ~ pathPrefix("v1") {
-      jobRoutes
+      jobRoutes ~ projectRoutes ~ flowRoutes
     }
 
   lazy val jobRoutes: Route = pathPrefix("job") {
@@ -42,14 +42,14 @@ class ClientRoutes(broker: ActorRef[BrokerCommand])(implicit system: ActorSystem
       entity(as[JobSubmit]) { job =>
         onComplete(broker.ask(ref => JobSubmitRequest(0, job.jobName, job.jobType, job.contentType,
           job.content, "", job.priority, job.user, Seq(), ref))) {
-          case Success(JobSubmitResp(jobId)) => complete(JobSubmitted(jobId))
+          case Success(JobSubmitResp(jobId)) => complete(successResult(jobId))
           case Failure(ex) => {
             LOGGER.info("", ex)
             ex match {
               case _: TimeoutException =>
-                complete(StatusCodes.RequestTimeout -> ErrorResult(ex.getMessage))
+                complete(StatusCodes.RequestTimeout -> errorResult(ex.getMessage))
               case _ =>
-                complete(StatusCodes.ServerError -> ErrorResult(ex.getMessage))
+                complete(StatusCodes.ServerError -> errorResult(ex.getMessage))
             }
           }
         }
@@ -57,4 +57,48 @@ class ClientRoutes(broker: ActorRef[BrokerCommand])(implicit system: ActorSystem
     }
   }
 
+  lazy val projectRoutes: Route = pathPrefix("project") {
+    post {
+      entity(as[ProjectSubmit]) { project =>
+        onComplete(broker.ask(ref => ProjectSubmitRequest(project.projectName, project.user, ref))) {
+          case Success(ProjectSubmitResp(projectId)) => complete(successResult(projectId))
+          case Failure(ex) => {
+            LOGGER.info("", ex)
+            ex match {
+              case _: TimeoutException =>
+                complete(StatusCodes.RequestTimeout -> errorResult(ex.getMessage))
+              case _ =>
+                complete(StatusCodes.ServerError -> errorResult(ex.getMessage))
+            }
+          }
+        }
+      }
+    }
+  }
+
+  lazy val flowRoutes: Route = pathPrefix("flow") {
+    post {
+      entity(as[FlowSubmit]) { flow =>
+
+        val dependencies = flow.dependencies
+          .map(d=>DependencyExpression(d.preProjectId, d.preFlowId, d.preJobId, d.rangeExpression, d.offsetExpression))
+
+        val schedules = flow.schedules.map(s=>ScheduleExpression(s.scheduleType, s.expression))
+
+        onComplete(broker.ask(ref => FlowSubmitRequest(flow.projectId, flow.flowName,
+          flow.user, dependencies, schedules, ref))) {
+          case Success(JobSubmitResp(jobId)) => complete(successResult(jobId))
+          case Failure(ex) => {
+            LOGGER.info("", ex)
+            ex match {
+              case _: TimeoutException =>
+                complete(StatusCodes.RequestTimeout -> errorResult(ex.getMessage))
+              case _ =>
+                complete(StatusCodes.ServerError -> errorResult(ex.getMessage))
+            }
+          }
+        }
+      }
+    }
+  }
 }

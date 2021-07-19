@@ -106,8 +106,9 @@ message JobUpdateRequest {
     string params = 7;
     int32 priority = 8;
     string user = 9;
-    repeated DependencyExpression dependencies = 10;
-    string sender = 11 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand]"];
+    string updateUser = 10;
+    repeated DependencyExpression dependencies = 11;
+    string sender = 12 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand]"];
 }
 
 

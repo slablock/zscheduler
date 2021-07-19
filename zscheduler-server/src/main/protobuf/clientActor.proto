@@ -47,6 +47,31 @@ message JobSubmitResp {
 }
 
 
+message JobUpdateResp {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
+    int64 jobId = 1;
+}
+
+message ProjectSubmitResp {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
+    int64 projectId = 1;
+}
+
+message ProjectUpdateResp {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
+    int64 projectId = 1;
+}
+
+message FlowSubmitResp {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
+    int64 flowId = 1;
+}
+
+message FlowUpdateResp {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
+    int64 flowId = 1;
+}
+
 message JobQueryStatusResp {
     option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
     int64 jobId = 1;
