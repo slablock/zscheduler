@@ -30,12 +30,12 @@ message BrokerMsg {
     }
 }
 
-message ScheduleExpression {
+message ScheduleExpressionMsg {
     int32 scheduleType = 1; // cron、fix delay 、fix rate 、iso8601
     string expression = 2;
 }
 
-message DependencyExpression {
+message DependencyExpressionMsg {
     int64 preProjectId = 1;
     int64 preFlowId = 2;
     int64 preJobId = 3;
@@ -64,8 +64,8 @@ message FlowSubmitRequest {
     int64 projectId = 1;
     string flowName = 2;
     string user = 3;
-    repeated DependencyExpression dependencies = 4;
-    repeated ScheduleExpression schedules = 5;
+    repeated DependencyExpressionMsg dependencies = 4;
+    repeated ScheduleExpressionMsg schedules = 5;
     string sender = 6 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand]"];
 }
 
@@ -76,29 +76,15 @@ message FlowUpdateRequest {
     string flowName = 3;
     string user = 4;
     string updateUser = 5;
-    repeated DependencyExpression dependencies = 6;
-    repeated ScheduleExpression schedules = 7;
+    repeated DependencyExpressionMsg dependencies = 6;
+    repeated ScheduleExpressionMsg schedules = 7;
     string sender = 8 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand]"];
 }
 
 message JobSubmitRequest {
     option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand";
     int64 projectId = 1;
-    string jobName = 2;
-    int32 jobType = 3;
-    int32 contentType = 4;
-    string content = 5;
-    string params = 6;
-    int32 priority = 7;
-    string user = 8;
-    repeated DependencyExpression dependencies = 9;
-    string sender = 10 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand]"];
-}
-
-message JobUpdateRequest {
-    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand";
-    int64 jobId = 1;
-    int64 projectId = 2;
+    int64 flowId = 2;
     string jobName = 3;
     int32 jobType = 4;
     int32 contentType = 5;
@@ -106,9 +92,25 @@ message JobUpdateRequest {
     string params = 7;
     int32 priority = 8;
     string user = 9;
-    string updateUser = 10;
-    repeated DependencyExpression dependencies = 11;
-    string sender = 12 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand]"];
+    repeated DependencyExpressionMsg dependencies = 10;
+    string sender = 11 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand]"];
+}
+
+message JobUpdateRequest {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand";
+    int64 jobId = 1;
+    int64 projectId = 2;
+    int64 flowId = 3;
+    string jobName = 4;
+    int32 jobType = 5;
+    int32 contentType = 6;
+    string content = 7;
+    string params = 8;
+    int32 priority = 9;
+    string user = 10;
+    string updateUser = 11;
+    repeated DependencyExpressionMsg dependencies = 12;
+    string sender = 13 [(scalapb.field).type = "akka.actor.typed.ActorRef[com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand]"];
 }
 
 

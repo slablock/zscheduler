@@ -3,14 +3,15 @@ package com.github.slablock.zscheduler.server.actor
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.receptionist.{Receptionist, ServiceKey}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, Routers}
-import com.github.slablock.zscheduler.dao.Tables.JobRow
+import com.github.slablock.zscheduler.dao.Tables.{JobDependencyRow, JobRow, ProjectRow}
 import com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand
 import com.github.slablock.zscheduler.server.actor.WorkerActor.WorkerCommand
-import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerMsg, BrokerStatus, JobSubmitRequest}
-import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, JobSubmitResp}
+import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerStatus, JobSubmitRequest, ProjectSubmitRequest}
+import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, JobSubmitResp, ProjectSubmitResp}
 import com.github.slablock.zscheduler.server.actor.protos.workerActor.{TaskSubmitRequest, WorkerMsg}
 import com.github.slablock.zscheduler.server.guice.Injectors
 import com.github.slablock.zscheduler.server.service.job.JobService
+import com.github.slablock.zscheduler.server.service.project.ProjectService
 import net.codingwell.scalaguice.InjectorExtensions.ScalaInjector
 import org.joda.time.DateTime
 
@@ -21,6 +22,8 @@ import scala.util.{Failure, Success}
 class BrokerActor(context: ActorContext[BrokerCommand]) extends AbstractBehavior[BrokerCommand](context) {
 
   private val jobService = Injectors.get().instance[JobService]
+  private val projectService = Injectors.get().instance[ProjectService]
+
   implicit val executionContext: ExecutionContext = context.system.executionContext
   val worker: ActorRef[WorkerCommand] = context.spawn(Routers.group(WorkerActor.serviceKey).withRoundRobinRouting(), "worker-group")
 
@@ -31,15 +34,32 @@ class BrokerActor(context: ActorContext[BrokerCommand]) extends AbstractBehavior
         client ! ClusterInfo("hello")
         Behaviors.same
       }
-      case JobSubmitRequest(projectId, jobName, jobType, contentType, content, params, priority, user, Seq(), sender) => {
+      case JobSubmitRequest(projectId, flowId, jobName, jobType, contentType, content, params, priority, user, dependencies, sender) => {
         val time = new Timestamp(DateTime.now().getMillis)
-        jobService.addJob(JobRow(0, projectId, jobName, jobType, contentType, content, params, priority, user, user, time, time))
+        val jobId = 0
+        val job = JobRow(jobId, projectId, flowId, jobName, jobType, contentType, content, params, priority, user, user, time, time)
+        val jobDependencies = dependencies.map(d=>
+          JobDependencyRow(0, projectId, flowId, jobId,
+            d.preProjectId, d.preFlowId, d.preJobId,
+            d.rangeExpression, d.offsetExpression, time, time))
+        jobService.addJob(job, jobDependencies)
           .onComplete({
-            case Success(JobRow(jobId,_,_,_,_,_,_,_,_,_,_,_)) =>
+            case Success(jobId) =>
               worker ! TaskSubmitRequest(s"$jobId", jobName, jobType, content, user, context.self)
               sender ! JobSubmitResp(jobId)
             case Failure(ex) =>
               sender ! JobSubmitResp(-1)
+          })
+        Behaviors.same
+      }
+      case ProjectSubmitRequest(projectName, user, sender)  => {
+        val time = new Timestamp(DateTime.now().getMillis)
+        projectService.addProject(ProjectRow(0, projectName, user, user, time, time))
+          .onComplete({
+            case Success(ProjectRow(projectId, _, _, _, _, _)) =>
+              sender ! ProjectSubmitResp(projectId)
+            case Failure(ex) =>
+              sender ! ProjectSubmitResp(-1)
           })
         Behaviors.same
       }

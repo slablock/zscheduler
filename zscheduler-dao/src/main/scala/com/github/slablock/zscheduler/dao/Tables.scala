@@ -200,6 +200,7 @@ trait Tables {
   /** Entity class storing rows of table job
    *  @param jobId Database column jobId SqlType(BIGINT UNSIGNED), AutoInc, PrimaryKey
    *  @param projectId Database column projectId SqlType(BIGINT UNSIGNED), Default(0)
+   *  @param flowId Database column flowId SqlType(BIGINT UNSIGNED), Default(0)
    *  @param jobName Database column jobName SqlType(VARCHAR), Length(100,true), Default()
    *  @param jobType Database column jobType SqlType(INT), Default(0)
    *  @param contentType Database column contentType SqlType(INT), Default(0)
@@ -210,22 +211,24 @@ trait Tables {
    *  @param updateUser Database column updateUser SqlType(VARCHAR), Length(32,true), Default()
    *  @param createTime Database column createTime SqlType(DATETIME)
    *  @param updateTime Database column updateTime SqlType(DATETIME) */
-  case class JobRow(jobId: Long, projectId: Long = 0L, jobName: String = "", jobType: Int = 0, contentType: Int = 0, content: String, params: String = "", priority: Int = 0, user: String = "", updateUser: String = "", createTime: java.sql.Timestamp, updateTime: java.sql.Timestamp)
+  case class JobRow(jobId: Long, projectId: Long = 0L, flowId: Long = 0L, jobName: String = "", jobType: Int = 0, contentType: Int = 0, content: String, params: String = "", priority: Int = 0, user: String = "", updateUser: String = "", createTime: java.sql.Timestamp, updateTime: java.sql.Timestamp)
   /** GetResult implicit for fetching JobRow objects using plain SQL queries */
   implicit def GetResultJobRow(implicit e0: GR[Long], e1: GR[String], e2: GR[Int], e3: GR[java.sql.Timestamp]): GR[JobRow] = GR{
     prs => import prs._
-    JobRow.tupled((<<[Long], <<[Long], <<[String], <<[Int], <<[Int], <<[String], <<[String], <<[Int], <<[String], <<[String], <<[java.sql.Timestamp], <<[java.sql.Timestamp]))
+    JobRow.tupled((<<[Long], <<[Long], <<[Long], <<[String], <<[Int], <<[Int], <<[String], <<[String], <<[Int], <<[String], <<[String], <<[java.sql.Timestamp], <<[java.sql.Timestamp]))
   }
   /** Table description of table job. Objects of this class serve as prototypes for rows in queries. */
   class Job(_tableTag: Tag) extends profile.api.Table[JobRow](_tableTag, Some("zscheduler"), "job") {
-    def * = (jobId, projectId, jobName, jobType, contentType, content, params, priority, user, updateUser, createTime, updateTime) <> (JobRow.tupled, JobRow.unapply)
+    def * = (jobId, projectId, flowId, jobName, jobType, contentType, content, params, priority, user, updateUser, createTime, updateTime) <> (JobRow.tupled, JobRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(jobId), Rep.Some(projectId), Rep.Some(jobName), Rep.Some(jobType), Rep.Some(contentType), Rep.Some(content), Rep.Some(params), Rep.Some(priority), Rep.Some(user), Rep.Some(updateUser), Rep.Some(createTime), Rep.Some(updateTime))).shaped.<>({r=>import r._; _1.map(_=> JobRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10.get, _11.get, _12.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = ((Rep.Some(jobId), Rep.Some(projectId), Rep.Some(flowId), Rep.Some(jobName), Rep.Some(jobType), Rep.Some(contentType), Rep.Some(content), Rep.Some(params), Rep.Some(priority), Rep.Some(user), Rep.Some(updateUser), Rep.Some(createTime), Rep.Some(updateTime))).shaped.<>({r=>import r._; _1.map(_=> JobRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10.get, _11.get, _12.get, _13.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column jobId SqlType(BIGINT UNSIGNED), AutoInc, PrimaryKey */
     val jobId: Rep[Long] = column[Long]("jobId", O.AutoInc, O.PrimaryKey)
     /** Database column projectId SqlType(BIGINT UNSIGNED), Default(0) */
     val projectId: Rep[Long] = column[Long]("projectId", O.Default(0L))
+    /** Database column flowId SqlType(BIGINT UNSIGNED), Default(0) */
+    val flowId: Rep[Long] = column[Long]("flowId", O.Default(0L))
     /** Database column jobName SqlType(VARCHAR), Length(100,true), Default() */
     val jobName: Rep[String] = column[String]("jobName", O.Length(100,varying=true), O.Default(""))
     /** Database column jobType SqlType(INT), Default(0) */

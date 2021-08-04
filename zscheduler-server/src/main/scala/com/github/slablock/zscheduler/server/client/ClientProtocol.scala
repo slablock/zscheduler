@@ -30,6 +30,7 @@ object ClientProtocol {
                         schedules: Seq[ScheduleExpression])
 
   case class JobSubmit(projectId: Long,
+                       flowId: Long,
                        jobName: String,
                        jobType: Int,
                        contentType: Int,
@@ -37,11 +38,12 @@ object ClientProtocol {
                        params: String,
                        priority: Int,
                        user: String,
-                       dependency: Seq[DependencyExpression])
+                       dependencies: Seq[DependencyExpression])
 
 
   case class JobUpdate(jobId: Long,
                        projectId: Long,
+                       flowId: Long,
                        jobName: String,
                        jobType: Int,
                        contentType: Int,
@@ -50,17 +52,19 @@ object ClientProtocol {
                        priority: Int,
                        user: String,
                        updateUser: String,
-                       dependency: Seq[DependencyExpression])
+                       dependencies: Seq[DependencyExpression])
 
-  case class ClientResult(code: Int, msg: String, data: Any)
+  trait ClientVo {}
 
-  case class JobVo()
+  case class ClientResult(code: Int, msg: String)
+
+  case class JobVo(data: String) extends ClientVo
 
 
-  def successResult(data: Any): ClientResult = ClientResult(200, "success", data)
-  def successResult(): ClientResult = ClientResult(200, "success", null)
+//  def successResult(data: Object): ClientResult = ClientResult(200, "success", data)
+  def successResult(): ClientResult = ClientResult(200, "success")
 
-  def errorResult(msg: String): ClientResult = ClientResult(500, msg, null)
-  def errorResult(): ClientResult = ClientResult(500, "error", null)
+  def errorResult(msg: String): ClientResult = ClientResult(500, msg)
+//  def errorResult(): ClientResult = ClientResult(500, "error", null)
 
 }

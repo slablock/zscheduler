@@ -48,5 +48,7 @@
 			<AppenderRef ref="Console" />
 			<AppenderRef ref="demo"/>
 		</Root>
+		<logger name="slick" level="INFO" />
+		<logger name="slick.jdbc" level="DEBUG" />
 	</Loggers>
 </Configuration>

@@ -9,11 +9,13 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait JobStorage {
   def queryJob(jobId: Long): Future[Option[JobRow]]
-  def saveJob(job: JobRow)(implicit executionContext: ExecutionContext): Future[JobRow]
+
+  def saveJob(jobRow: JobRow, jobDependencyRows: Seq[JobDependencyRow])(implicit executionContext: ExecutionContext): Future[Long]
 }
 
 
-private [service] class JdbcJobStorage @Inject()(val dbComponent: ZSDbComponent) extends JobStorage {
+private[service] class JdbcJobStorage @Inject()(val dbComponent: ZSDbComponent) extends JobStorage {
+
   import dbComponent._
   import profile.api._
 
@@ -21,11 +23,22 @@ private [service] class JdbcJobStorage @Inject()(val dbComponent: ZSDbComponent)
     db.run(job.filter(d => d.jobId === jobId).result.headOption)
 
 
-  private val insertQuery = job returning job.map(_.jobId) into ((item, jobId) => item.copy(jobId = jobId))
+  override def saveJob(jobRow: JobRow, jobDependencyRows: Seq[JobDependencyRow])
+                      (implicit executionContext: ExecutionContext): Future[Long] = {
 
-  override def saveJob(job: JobRow)(implicit executionContext: ExecutionContext): Future[JobRow] = {
-    val action = insertQuery += job
-    db.run(action.withTransactionIsolation(TransactionIsolation.ReadCommitted).transactionally)
+    val jobQ: DBIO[Long] = job returning job.map(_.jobId) += jobRow
+
+    def addDependencies(jobId: Long): DBIO[Option[Int]] = jobDependency ++= jobDependencyRows.map(jd => {
+      JobDependencyRow(jd.id, jd.preProjectId, jd.flowId,
+        jobId, jd.preProjectId, jd.preFlowId, jd.preJobId, jd.rangeExpression,
+        jd.offsetExpression, jd.createTime, jd.updateTime)
+    })
+
+    val q: DBIO[Long] = jobQ.flatMap(jobId => {
+      addDependencies(jobId).andThen(DBIO.successful(jobId))
+    })
+
+    db.run(q.withTransactionIsolation(TransactionIsolation.ReadCommitted).transactionally)
   }
 
 }

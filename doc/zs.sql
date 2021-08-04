@@ -26,6 +26,7 @@ CREATE TABLE `flow` (
 CREATE TABLE `job` (
     `jobId` bigint(11) unsigned NOT NULL AUTO_INCREMENT,
     `projectId` bigint(11) unsigned NOT NULL DEFAULT '0' COMMENT '项目ID',
+    `flowId` bigint(11) unsigned NOT NULL DEFAULT '0' COMMENT '任务流ID',
     `jobName` varchar(100) NOT NULL DEFAULT '' COMMENT '任务名称',
     `jobType` int(3) NOT NULL DEFAULT '0' COMMENT '任务类型',
     `contentType` int(3) not null default '0' comment '任务内容类型',

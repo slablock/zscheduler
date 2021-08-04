@@ -10,7 +10,7 @@ class JobService @Inject()(jobStorage: JobStorage) {
   def queryJob(jobId: Long): Future[Option[JobRow]] =
     jobStorage.queryJob(jobId)
 
-  def addJob(job: JobRow)(implicit executionContext: ExecutionContext): Future[JobRow] =
-    jobStorage.saveJob(job)
+  def addJob(job: JobRow, jobDependencies: Seq[JobDependencyRow])(implicit executionContext: ExecutionContext): Future[Long] =
+    jobStorage.saveJob(job, jobDependencies)
 
 }
