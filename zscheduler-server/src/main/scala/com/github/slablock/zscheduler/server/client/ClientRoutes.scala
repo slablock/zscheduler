@@ -8,7 +8,7 @@ import akka.util.Timeout
 import com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand
 import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerStatus, DependencyExpressionMsg, FlowSubmitRequest, FlowUpdateRequest, JobSubmitRequest, JobUpdateRequest, ProjectQueryRequest, ProjectSubmitRequest, ProjectUpdateRequest, ScheduleExpressionMsg}
 import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, FlowSubmitResp, FlowUpdateResp, JobSubmitResp, ProjectQueryResp, ProjectSubmitResp, ProjectUpdateResp}
-import com.github.slablock.zscheduler.server.client.ClientProtocol.{CODE_SUCCESS, DependencyExpression, FlowSubmit, FlowSubmitResult, FlowUpdate, JobSubmit, JobSubmitResult, JobUpdate, ProjectSubmit, ProjectUpdate, ProjectWriteResult, ScheduleExpression, errorResult}
+import com.github.slablock.zscheduler.server.client.ClientProtocol.{CODE_FAIL, CODE_SUCCESS, DependencyExpression, FlowSubmit, FlowSubmitResult, FlowUpdate, JobSubmit, JobSubmitResult, JobUpdate, ProjectSubmit, ProjectUpdate, ProjectWriteResult, ScheduleExpression, errorResult}
 import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport
 import io.circe.generic.auto._
 import org.slf4j.{Logger, LoggerFactory}
@@ -44,7 +44,12 @@ class ClientRoutes(broker: ActorRef[BrokerCommand])(implicit system: ActorSystem
       post {
         entity(as[ProjectSubmit]) { project =>
           onComplete(broker.ask(ref => ProjectSubmitRequest(project.projectName, project.user, ref))) {
-            case Success(ProjectSubmitResp(projectId)) => complete(ProjectWriteResult(CODE_SUCCESS, projectId))
+            case Success(ProjectSubmitResp(success, projectId, msg)) =>
+              if (success) {
+                complete(ProjectWriteResult(CODE_SUCCESS, msg, projectId))
+              } else {
+                complete(ProjectWriteResult(CODE_FAIL, msg, projectId))
+              }
             case Failure(ex) => errHandler(ex)
           }
         }
@@ -55,7 +60,12 @@ class ClientRoutes(broker: ActorRef[BrokerCommand])(implicit system: ActorSystem
         entity(as[ProjectUpdate]) { project =>
           onComplete(broker.ask(ref => ProjectUpdateRequest(project.projectId, project.projectName,
             project.user, project.updateUser, ref))) {
-            case Success(ProjectUpdateResp(projectId)) => complete(ProjectWriteResult(CODE_SUCCESS, projectId))
+            case Success(ProjectUpdateResp(success, projectId, msg)) =>
+              if (success) {
+                complete(ProjectWriteResult(CODE_SUCCESS, msg, projectId))
+              } else {
+                complete(ProjectWriteResult(CODE_FAIL, msg, projectId))
+              }
             case Failure(ex) => errHandler(ex)
           }
         }

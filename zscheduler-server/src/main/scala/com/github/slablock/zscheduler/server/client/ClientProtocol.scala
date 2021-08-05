@@ -17,7 +17,7 @@ object ClientProtocol {
   case class ProjectSubmit(projectName: String, user: String)
   case class ProjectUpdate(projectId: Long, projectName: String, user: String, updateUser: String)
   case class ProjectQuery(projectId: Long)
-  case class ProjectWriteResult(code: Int, projectId: Long)
+  case class ProjectWriteResult(code: Int, msg: String, projectId: Long)
 
   case class FlowSubmit(projectId: Long,
                         flowName: String,

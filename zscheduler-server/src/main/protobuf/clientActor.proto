@@ -119,12 +119,16 @@ message JobQueryResp {
 
 message ProjectSubmitResp {
     option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
-    int64 projectId = 1;
+    bool success = 1;
+    int64 projectId = 2;
+    string msg = 3;
 }
 
 message ProjectUpdateResp {
     option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
-    int64 projectId = 1;
+    bool success = 1;
+    int64 projectId = 2;
+    string msg = 3;
 }
 
 

@@ -10,7 +10,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait ProjectStorage {
   def queryProject(projectId: Long): Future[Option[ProjectRow]]
-  def saveProject(project: ProjectRow)(implicit executionContext: ExecutionContext): Future[ProjectRow]
+  def saveProject(projectRow: ProjectRow)(implicit executionContext: ExecutionContext): Future[Long]
+  def updateProject(projectRow: ProjectRow)(implicit executionContext: ExecutionContext): Future[Int]
 }
 
 private[service] class JdbcProjectStorage @Inject()(val dbComponent: ZSDbComponent) extends ProjectStorage {
@@ -21,11 +22,16 @@ private[service] class JdbcProjectStorage @Inject()(val dbComponent: ZSDbCompone
     db.run(project.filter(d=>d.projectId === projectId).result.headOption)
   }
 
-  private val insertQuery = project returning project.map(_.projectId) into ((item, projectId) => item.copy(projectId = projectId))
+  override def saveProject(projectRow: Tables.ProjectRow)(implicit executionContext: ExecutionContext): Future[Long] = {
+    val q = project returning project.map(_.projectId) += projectRow
+    db.run(q.withTransactionIsolation(TransactionIsolation.ReadCommitted).transactionally)
+  }
 
-  override def saveProject(project: Tables.ProjectRow)(implicit executionContext: ExecutionContext): Future[Tables.ProjectRow] = {
-    val action = insertQuery += project
-    db.run(action.withTransactionIsolation(TransactionIsolation.ReadCommitted).transactionally)
+  override def updateProject(projectRow: ProjectRow)(implicit executionContext: ExecutionContext): Future[Int] = {
+    val q = project.filter(d=>d.projectId === projectRow.projectId)
+      .map(d=>(d.projectName, d.user, d.updateUser, d.updateTime))
+      .update((projectRow.projectName, projectRow.user, projectRow.updateUser, projectRow.updateTime))
+    db.run(q.withTransactionIsolation(TransactionIsolation.ReadCommitted).transactionally)
   }
 
 }

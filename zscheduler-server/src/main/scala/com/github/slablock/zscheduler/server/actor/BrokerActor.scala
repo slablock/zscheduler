@@ -6,8 +6,8 @@ import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, Rou
 import com.github.slablock.zscheduler.dao.Tables.{JobDependencyRow, JobRow, ProjectRow}
 import com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand
 import com.github.slablock.zscheduler.server.actor.WorkerActor.WorkerCommand
-import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerStatus, JobSubmitRequest, ProjectQueryRequest, ProjectSubmitRequest}
-import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, JobSubmitResp, ProjectInfoEntry, ProjectQueryResp, ProjectSubmitResp}
+import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerStatus, JobSubmitRequest, ProjectQueryRequest, ProjectSubmitRequest, ProjectUpdateRequest}
+import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, JobSubmitResp, ProjectInfoEntry, ProjectQueryResp, ProjectSubmitResp, ProjectUpdateResp}
 import com.github.slablock.zscheduler.server.actor.protos.workerActor.{TaskSubmitRequest, WorkerMsg}
 import com.github.slablock.zscheduler.server.guice.Injectors
 import com.github.slablock.zscheduler.server.service.job.JobService
@@ -56,11 +56,26 @@ class BrokerActor(context: ActorContext[BrokerCommand]) extends AbstractBehavior
         val time = new Timestamp(DateTime.now().getMillis)
         projectService.addProject(ProjectRow(0, projectName, user, user, time, time))
           .onComplete({
-            case Success(ProjectRow(projectId, _, _, _, _, _)) =>
-              sender ! ProjectSubmitResp(projectId)
+            case Success(projectId) =>
+              sender ! ProjectSubmitResp(success = true, projectId)
             case Failure(ex) =>
-              sender ! ProjectSubmitResp(-1)
+              sender ! ProjectSubmitResp(success = false, msg = ex.getLocalizedMessage)
           })
+        Behaviors.same
+      }
+      case ProjectUpdateRequest(projectId, projectName, user, updateUser, sender)  => {
+        val time = new Timestamp(DateTime.now().getMillis)
+        projectService.updateProject(ProjectRow(projectId, projectName, user, updateUser, time, time)).onComplete({
+          case Success(rows) => {
+            if (rows > 0) {
+              sender ! ProjectUpdateResp(success = true, projectId, "")
+            } else {
+              sender ! ProjectUpdateResp(success = false, projectId, "not found!")
+            }
+          }
+          case Failure(ex) =>
+            sender ! ProjectUpdateResp(success = false, projectId, msg = ex.getLocalizedMessage)
+        })
         Behaviors.same
       }
       case ProjectQueryRequest(projectId, sender) => {
