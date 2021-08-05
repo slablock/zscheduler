@@ -6,8 +6,8 @@ import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, Rou
 import com.github.slablock.zscheduler.dao.Tables.{JobDependencyRow, JobRow, ProjectRow}
 import com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand
 import com.github.slablock.zscheduler.server.actor.WorkerActor.WorkerCommand
-import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerStatus, JobSubmitRequest, ProjectSubmitRequest}
-import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, JobSubmitResp, ProjectSubmitResp}
+import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerStatus, JobSubmitRequest, ProjectQueryRequest, ProjectSubmitRequest}
+import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, JobSubmitResp, ProjectInfoEntry, ProjectQueryResp, ProjectSubmitResp}
 import com.github.slablock.zscheduler.server.actor.protos.workerActor.{TaskSubmitRequest, WorkerMsg}
 import com.github.slablock.zscheduler.server.guice.Injectors
 import com.github.slablock.zscheduler.server.service.job.JobService
@@ -61,6 +61,16 @@ class BrokerActor(context: ActorContext[BrokerCommand]) extends AbstractBehavior
             case Failure(ex) =>
               sender ! ProjectSubmitResp(-1)
           })
+        Behaviors.same
+      }
+      case ProjectQueryRequest(projectId, sender) => {
+        projectService.queryProject(projectId).onComplete({
+        case Success(None) => sender ! ProjectQueryResp(success = true, Option.empty, "")
+          case Success(Some(ProjectRow(projectId, projectName, user, updateUser, createTime, updateTime))) =>
+            sender ! ProjectQueryResp(success = true,
+              Some(ProjectInfoEntry(projectId, projectName, user, updateUser, createTime.getTime, updateTime.getTime)),"")
+          case Failure(ex) => sender ! ProjectQueryResp(success = false, Option.empty, ex.getLocalizedMessage)
+        })
         Behaviors.same
       }
     }

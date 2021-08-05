@@ -3,6 +3,9 @@ package com.github.slablock.zscheduler.server.client
 
 object ClientProtocol {
 
+  val CODE_SUCCESS: Int = 200
+  val CODE_FAIL: Int = 400
+
   case class ScheduleExpression(scheduleType: Int, expression: String)
 
   case class DependencyExpression(preProjectId: Long,
@@ -13,6 +16,8 @@ object ClientProtocol {
 
   case class ProjectSubmit(projectName: String, user: String)
   case class ProjectUpdate(projectId: Long, projectName: String, user: String, updateUser: String)
+  case class ProjectQuery(projectId: Long)
+  case class ProjectWriteResult(code: Int, projectId: Long)
 
   case class FlowSubmit(projectId: Long,
                         flowName: String,
@@ -29,6 +34,9 @@ object ClientProtocol {
                         dependencies: Seq[DependencyExpression],
                         schedules: Seq[ScheduleExpression])
 
+
+  case class FlowSubmitResult(code: Int, flowId: Long)
+
   case class JobSubmit(projectId: Long,
                        flowId: Long,
                        jobName: String,
@@ -40,6 +48,8 @@ object ClientProtocol {
                        user: String,
                        dependencies: Seq[DependencyExpression])
 
+
+  case class JobSubmitResult(code: Int, jobId: Long)
 
   case class JobUpdate(jobId: Long,
                        projectId: Long,
@@ -54,17 +64,9 @@ object ClientProtocol {
                        updateUser: String,
                        dependencies: Seq[DependencyExpression])
 
-  trait ClientVo {}
+  case class ErrResult(code: Int, msg: String)
 
-  case class ClientResult(code: Int, msg: String)
-
-  case class JobVo(data: String) extends ClientVo
-
-
-//  def successResult(data: Object): ClientResult = ClientResult(200, "success", data)
-  def successResult(): ClientResult = ClientResult(200, "success")
-
-  def errorResult(msg: String): ClientResult = ClientResult(500, msg)
-//  def errorResult(): ClientResult = ClientResult(500, "error", null)
-
+  def errorResult(msg: String): ErrResult = {
+    ErrResult(CODE_FAIL, msg)
+  }
 }

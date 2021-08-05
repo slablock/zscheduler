@@ -31,6 +31,64 @@ message ClientMsg {
 }
 
 
+message ProjectInfoEntry {
+    int64 projectId = 1;
+    string projectName = 2;
+    string user = 3;
+    string updateUser = 4;
+    int64 createTime = 5;
+    int64 updateTime = 6;
+}
+
+message DependencyEntry {
+    int64 id = 1;
+    int64 preProjectId = 2;
+    int64 preFlowId = 3;
+    int64 preJobId = 4;
+    string rangeExpression = 5;
+    string offsetExpression = 6;
+    int64 createTime = 7;
+    int64 updateTime = 8;
+}
+
+message ScheduleEntry {
+    int64 id = 1;
+    int32 scheduleType = 2; // cron、fix delay 、fix rate 、iso8601
+    string expression = 3;
+    int64 createTime = 4;
+    int64 updateTime = 5;
+}
+
+message FlowInfoEntry {
+    int64 flowId = 1;
+    int64 projectId = 2;
+    string flowName = 3;
+    string user = 4;
+    string updateUser = 5;
+    int64 createTime = 6;
+    int64 updateTime = 7;
+    repeated DependencyEntry dependencies = 8;
+    repeated ScheduleEntry schedules = 9;
+}
+
+message JobInfoEntry {
+    int64 jobId = 1;
+    int64 projectId = 2;
+    int64 flowId = 3;
+    string jobName = 4;
+    int32 jobType = 5;
+    int32 contentType = 6;
+    string content = 7;
+    string params = 8;
+    int32 priority = 9;
+    string user = 10;
+    string updateUser = 11;
+    int64 createTime = 12;
+    int64 updateTime = 13;
+    repeated DependencyEntry dependencies = 14;
+}
+
+
 message ClusterInfo {
     option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
     string data = 1;
@@ -52,6 +110,13 @@ message JobUpdateResp {
     int64 jobId = 1;
 }
 
+message JobQueryResp {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
+    bool success = 1;
+    JobInfoEntry data = 2;
+    string msg = 3;
+}
+
 message ProjectSubmitResp {
     option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
     int64 projectId = 1;
@@ -62,6 +127,14 @@ message ProjectUpdateResp {
     int64 projectId = 1;
 }
 
+
+message ProjectQueryResp {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
+    bool success = 1;
+    ProjectInfoEntry data = 2;
+    string msg = 3;
+}
+
 message FlowSubmitResp {
     option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
     int64 flowId = 1;
@@ -70,6 +143,13 @@ message FlowSubmitResp {
 message FlowUpdateResp {
     option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
     int64 flowId = 1;
+}
+
+message FlowQueryResp {
+    option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
+    bool success = 1;
+    FlowInfoEntry data = 2;
+    string msg = 3;
 }
 
 message JobQueryStatusResp {
