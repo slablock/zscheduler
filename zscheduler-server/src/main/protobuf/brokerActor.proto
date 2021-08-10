@@ -31,16 +31,20 @@ message BrokerMsg {
 }
 
 message ScheduleExpressionMsg {
-    int32 scheduleType = 1; // cron、fix delay 、fix rate 、iso8601
-    string expression = 2;
+    int64 id = 1;
+    int32 opType = 2;
+    int32 scheduleType = 3; // cron、fix delay 、fix rate 、iso8601
+    string expression = 4;
 }
 
 message DependencyExpressionMsg {
-    int64 preProjectId = 1;
-    int64 preFlowId = 2;
-    int64 preJobId = 3;
-    string rangeExpression = 4;
-    string offsetExpression = 5;
+    int64 id = 1;
+    int32 opType = 2;
+    int64 preProjectId = 3;
+    int64 preFlowId = 4;
+    int64 preJobId = 5;
+    string rangeExpression = 6;
+    string offsetExpression = 7;
 }
 
 message ProjectSubmitRequest {

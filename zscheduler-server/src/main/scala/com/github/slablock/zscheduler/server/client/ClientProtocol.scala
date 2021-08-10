@@ -6,17 +6,17 @@ object ClientProtocol {
   val CODE_SUCCESS: Int = 200
   val CODE_FAIL: Int = 400
 
-  case class ScheduleExpression(scheduleType: Int, expression: String)
+  case class ScheduleExpression(id: Long = 0, opType: Int, scheduleType: Int, expression: String)
 
-  case class DependencyExpression(preProjectId: Long,
-                                  preFlowId: Long,
-                                  preJobId: Long,
-                                  rangeExpression: String,
-                                  offsetExpression: String)
+  case class DependencyExpression(id: Long = 0, opType: Int, preProjectId: Long, preFlowId: Long, preJobId: Long,
+                                  rangeExpression: String, offsetExpression: String)
 
   case class ProjectSubmit(projectName: String, user: String)
+
   case class ProjectUpdate(projectId: Long, projectName: String, user: String, updateUser: String)
+
   case class ProjectQuery(projectId: Long)
+
   case class ProjectWriteResult(code: Int, msg: String, projectId: Long)
 
   case class FlowSubmit(projectId: Long,

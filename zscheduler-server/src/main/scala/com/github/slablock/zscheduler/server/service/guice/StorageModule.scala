@@ -1,6 +1,7 @@
 package com.github.slablock.zscheduler.server.service.guice
 
 import com.github.slablock.zscheduler.server.service._
+import com.github.slablock.zscheduler.server.service.flow.{FlowService, FlowStorage, JdbcFlowStorage}
 import com.github.slablock.zscheduler.server.service.job.{JdbcJobStorage, JobService, JobStorage}
 import com.github.slablock.zscheduler.server.service.project.{JdbcProjectStorage, ProjectService, ProjectStorage}
 import com.google.inject.{AbstractModule, Singleton}
@@ -16,6 +17,9 @@ class StorageModule extends AbstractModule with ScalaModule {
 
     bind[ProjectStorage].to[JdbcProjectStorage].in[Singleton]
     bind[ProjectService].in[Singleton]
+
+    bind[FlowStorage].to[JdbcFlowStorage].in[Singleton]
+    bind[FlowService].in[Singleton]
   }
 
 }

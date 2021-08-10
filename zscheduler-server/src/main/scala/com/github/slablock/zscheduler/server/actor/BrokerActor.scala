@@ -6,16 +6,15 @@ import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, Rou
 import com.github.slablock.zscheduler.dao.Tables.{JobDependencyRow, JobRow, ProjectRow}
 import com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand
 import com.github.slablock.zscheduler.server.actor.WorkerActor.WorkerCommand
-import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerStatus, JobSubmitRequest, ProjectQueryRequest, ProjectSubmitRequest, ProjectUpdateRequest}
+import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerStatus, FlowQueryRequest, FlowSubmitRequest, FlowUpdateRequest, JobSubmitRequest, ProjectQueryRequest, ProjectSubmitRequest, ProjectUpdateRequest}
 import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, JobSubmitResp, ProjectInfoEntry, ProjectQueryResp, ProjectSubmitResp, ProjectUpdateResp}
 import com.github.slablock.zscheduler.server.actor.protos.workerActor.{TaskSubmitRequest, WorkerMsg}
 import com.github.slablock.zscheduler.server.guice.Injectors
+import com.github.slablock.zscheduler.server.service.flow.FlowService
 import com.github.slablock.zscheduler.server.service.job.JobService
 import com.github.slablock.zscheduler.server.service.project.ProjectService
 import net.codingwell.scalaguice.InjectorExtensions.ScalaInjector
-import org.joda.time.DateTime
 
-import java.sql.Timestamp
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
@@ -23,72 +22,92 @@ class BrokerActor(context: ActorContext[BrokerCommand]) extends AbstractBehavior
 
   private val jobService = Injectors.get().instance[JobService]
   private val projectService = Injectors.get().instance[ProjectService]
+  private val flowService = Injectors.get().instance[FlowService]
 
   implicit val executionContext: ExecutionContext = context.system.executionContext
   val worker: ActorRef[WorkerCommand] = context.spawn(Routers.group(WorkerActor.serviceKey).withRoundRobinRouting(), "worker-group")
 
   override def onMessage(msg: BrokerCommand): Behavior[BrokerCommand] = {
     msg match {
-      case BrokerStatus(client) => {
-        context.log.info("broker receive msg!!!")
-        client ! ClusterInfo("hello")
-        Behaviors.same
-      }
-      case JobSubmitRequest(projectId, flowId, jobName, jobType, contentType, content, params, priority, user, dependencies, sender) => {
-        val time = new Timestamp(DateTime.now().getMillis)
-        val jobId = 0
-        val job = JobRow(jobId, projectId, flowId, jobName, jobType, contentType, content, params, priority, user, user, time, time)
-        val jobDependencies = dependencies.map(d=>
-          JobDependencyRow(0, projectId, flowId, jobId,
-            d.preProjectId, d.preFlowId, d.preJobId,
-            d.rangeExpression, d.offsetExpression, time, time))
-        jobService.addJob(job, jobDependencies)
-          .onComplete({
-            case Success(jobId) =>
-              worker ! TaskSubmitRequest(s"$jobId", jobName, jobType, content, user, context.self)
-              sender ! JobSubmitResp(jobId)
-            case Failure(ex) =>
-              sender ! JobSubmitResp(-1)
-          })
-        Behaviors.same
-      }
-      case ProjectSubmitRequest(projectName, user, sender)  => {
-        val time = new Timestamp(DateTime.now().getMillis)
-        projectService.addProject(ProjectRow(0, projectName, user, user, time, time))
-          .onComplete({
-            case Success(projectId) =>
-              sender ! ProjectSubmitResp(success = true, projectId)
-            case Failure(ex) =>
-              sender ! ProjectSubmitResp(success = false, msg = ex.getLocalizedMessage)
-          })
-        Behaviors.same
-      }
-      case ProjectUpdateRequest(projectId, projectName, user, updateUser, sender)  => {
-        val time = new Timestamp(DateTime.now().getMillis)
-        projectService.updateProject(ProjectRow(projectId, projectName, user, updateUser, time, time)).onComplete({
-          case Success(rows) => {
-            if (rows > 0) {
-              sender ! ProjectUpdateResp(success = true, projectId, "")
-            } else {
-              sender ! ProjectUpdateResp(success = false, projectId, "not found!")
-            }
-          }
-          case Failure(ex) =>
-            sender ! ProjectUpdateResp(success = false, projectId, msg = ex.getLocalizedMessage)
-        })
-        Behaviors.same
-      }
-      case ProjectQueryRequest(projectId, sender) => {
-        projectService.queryProject(projectId).onComplete({
-        case Success(None) => sender ! ProjectQueryResp(success = true, Option.empty, "")
-          case Success(Some(ProjectRow(projectId, projectName, user, updateUser, createTime, updateTime))) =>
-            sender ! ProjectQueryResp(success = true,
-              Some(ProjectInfoEntry(projectId, projectName, user, updateUser, createTime.getTime, updateTime.getTime)),"")
-          case Failure(ex) => sender ! ProjectQueryResp(success = false, Option.empty, ex.getLocalizedMessage)
-        })
-        Behaviors.same
-      }
+      case req: BrokerStatus => onBrokerStatus(req)
+      case req: ProjectSubmitRequest => onProjectSubmit(req)
+      case req: ProjectUpdateRequest => onProjectUpdate(req)
+      case req: ProjectQueryRequest => onProjectQuery(req)
+      case req: FlowSubmitRequest => onFlowSubmit(req)
+      case req: FlowUpdateRequest => onFlowUpdate(req)
+      case req: FlowQueryRequest => onFlowQuery(req)
+      case req: JobSubmitRequest => onJobSubmit(req)
     }
+  }
+
+
+  def onBrokerStatus(req: BrokerStatus): Behavior[BrokerCommand] = {
+    context.log.info("broker receive msg!!!")
+    req.sender ! ClusterInfo("hello")
+    Behaviors.same
+  }
+
+
+  def onJobSubmit(req: JobSubmitRequest): Behavior[BrokerCommand] = {
+    jobService.addJob(req)
+      .onComplete({
+        case Success(jobId) =>
+          worker ! TaskSubmitRequest(s"$jobId", req.jobName, req.jobType, req.content, req.user, context.self)
+          req.sender ! JobSubmitResp(jobId)
+        case Failure(ex) =>
+          req.sender ! JobSubmitResp(-1)
+      })
+    Behaviors.same
+  }
+
+  def onProjectSubmit(req: ProjectSubmitRequest): Behavior[BrokerCommand] = {
+    projectService.addProject(req)
+      .onComplete({
+        case Success(projectId) =>
+          req.sender ! ProjectSubmitResp(success = true, projectId)
+        case Failure(ex) =>
+          req.sender ! ProjectSubmitResp(success = false, msg = ex.getLocalizedMessage)
+      })
+    Behaviors.same
+  }
+
+  def onProjectUpdate(req: ProjectUpdateRequest): Behavior[BrokerCommand] = {
+    projectService.updateProject(req).onComplete({
+      case Success(rows) => {
+        if (rows > 0) {
+          req.sender ! ProjectUpdateResp(success = true, req.projectId, "")
+        } else {
+          req.sender ! ProjectUpdateResp(success = false, req.projectId, "not found!")
+        }
+      }
+      case Failure(ex) =>
+        req.sender ! ProjectUpdateResp(success = false, req.projectId, msg = ex.getLocalizedMessage)
+    })
+    Behaviors.same
+  }
+
+  def onProjectQuery(req: ProjectQueryRequest): Behavior[BrokerCommand] = {
+    projectService.queryProject(req.projectId).onComplete({
+      case Success(None) => req.sender ! ProjectQueryResp(success = true, Option.empty, "")
+      case Success(Some(ProjectRow(projectId, projectName, user, updateUser, createTime, updateTime))) =>
+        req.sender ! ProjectQueryResp(success = true,
+          Some(ProjectInfoEntry(projectId, projectName, user, updateUser, createTime.getTime, updateTime.getTime)), "")
+      case Failure(ex) => req.sender ! ProjectQueryResp(success = false, Option.empty, ex.getLocalizedMessage)
+    })
+    Behaviors.same
+  }
+
+  def onFlowSubmit(req: FlowSubmitRequest): Behavior[BrokerCommand] = {
+    flowService.saveFlow(req)
+    Behaviors.same
+  }
+
+  def onFlowUpdate(req: FlowUpdateRequest): Behavior[BrokerCommand] = {
+    Behaviors.same
+  }
+
+  def onFlowQuery(req: FlowQueryRequest): Behavior[BrokerCommand] = {
+    Behaviors.same
   }
 }
 
