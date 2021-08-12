@@ -4,21 +4,18 @@ import akka.actor.typed.scaladsl.AskPattern.{Askable, schedulerFromActorSystem}
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.util.Timeout
 import com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand
 import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{FlowSubmitRequest, FlowUpdateRequest, JobSubmitRequest, JobUpdateRequest, ProjectQueryRequest}
 import com.github.slablock.zscheduler.server.actor.protos.clientActor.{FlowSubmitResp, FlowUpdateResp, JobSubmitResp, ProjectQueryResp}
 import com.github.slablock.zscheduler.server.client.ClientProtocol._
 import com.github.slablock.zscheduler.server.client.ClientRoutes.{errHandler, toDependencyMsg, toScheduleMsg}
 import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport
-import io.circe.generic.auto._
 
-import scala.concurrent.duration._
 import scala.util.{Failure, Success}
+import io.circe.generic.extras.auto._
+import ClientRoutes._
 
 class JobRoute(broker: ActorRef[BrokerCommand])(implicit system: ActorSystem[_]) extends ErrorAccumulatingCirceSupport {
-
-  implicit val timeout: Timeout = 3.seconds
 
   lazy val route: Route = pathPrefix("job") {
     path("create") {

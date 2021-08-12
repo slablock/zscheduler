@@ -10,7 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait FlowStorage {
 
-  def queryFlow(flowId: Long): Future[Option[FlowRow]]
+  def queryFlow(flowId: Long)(implicit executionContext: ExecutionContext): Future[(Option[FlowRow], Seq[FlowDependencyRow], Seq[FlowScheduleRow])]
 
   def saveFlow(flowRow: FlowRow, flowDependencyRows: Seq[FlowDependencyRow],
                flowScheduleRows: Seq[FlowScheduleRow])(implicit executionContext: ExecutionContext): Future[Long]
@@ -24,8 +24,15 @@ private[service] class JdbcFlowStorage @Inject()(val dbComponent: ZSDbComponent)
   import dbComponent._
   import profile.api._
 
-  override def queryFlow(flowId: Long): Future[Option[FlowRow]] = {
-    db.run(flow.filter(d => d.flowId === flowId).result.headOption)
+  override def queryFlow(flowId: Long)(implicit executionContext: ExecutionContext):
+  Future[(Option[FlowRow], Seq[FlowDependencyRow], Seq[FlowScheduleRow])] = {
+    val flowQ : DBIO[Option[FlowRow]] = flow.filter(d => d.flowId === flowId).result.headOption
+    val flowDependencyQ : DBIO[Seq[FlowDependencyRow]] = flowDependency.filter(d=>d.flowId===flowId).result
+    val flowScheduleQ : DBIO[Seq[FlowScheduleRow]] = flowSchedule.filter(d=>d.flowId===flowId).result
+
+    val q: DBIO[(Option[FlowRow], Seq[FlowDependencyRow], Seq[FlowScheduleRow])] = (flowQ zip flowDependencyQ zip flowScheduleQ)
+      .collect(r => (r._1._1, r._1._2, r._2))
+    db.run(q)
   }
 
   override def saveFlow(flowRow: FlowRow, flowDependencyRows: Seq[FlowDependencyRow],

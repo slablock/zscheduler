@@ -7,7 +7,7 @@ import com.github.slablock.zscheduler.dao.Tables.{JobDependencyRow, JobRow, Proj
 import com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand
 import com.github.slablock.zscheduler.server.actor.WorkerActor.WorkerCommand
 import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerStatus, FlowQueryRequest, FlowSubmitRequest, FlowUpdateRequest, JobSubmitRequest, ProjectQueryRequest, ProjectSubmitRequest, ProjectUpdateRequest}
-import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, JobSubmitResp, ProjectInfoEntry, ProjectQueryResp, ProjectSubmitResp, ProjectUpdateResp}
+import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, DependencyEntry, FlowInfoEntry, FlowQueryResp, FlowSubmitResp, FlowUpdateResp, JobSubmitResp, ProjectInfoEntry, ProjectQueryResp, ProjectSubmitResp, ProjectUpdateResp, ScheduleEntry}
 import com.github.slablock.zscheduler.server.actor.protos.workerActor.{TaskSubmitRequest, WorkerMsg}
 import com.github.slablock.zscheduler.server.guice.Injectors
 import com.github.slablock.zscheduler.server.service.flow.FlowService
@@ -98,15 +98,48 @@ class BrokerActor(context: ActorContext[BrokerCommand]) extends AbstractBehavior
   }
 
   def onFlowSubmit(req: FlowSubmitRequest): Behavior[BrokerCommand] = {
-    flowService.saveFlow(req)
+    flowService.saveFlow(req).onComplete({
+      case Success(flowId) => req.sender ! FlowSubmitResp(success = true, flowId)
+      case Failure(ex) => req.sender ! FlowSubmitResp(success = false, -1, ex.getLocalizedMessage)
+    })
     Behaviors.same
   }
 
   def onFlowUpdate(req: FlowUpdateRequest): Behavior[BrokerCommand] = {
+    flowService.modifyFlow(req).onComplete({
+      case Success(rows) => {
+        if (rows > 0) {
+          req.sender ! FlowUpdateResp(success = true, req.flowId, "")
+        } else {
+          req.sender ! FlowUpdateResp(success = false, req.flowId, "not found!")
+        }
+      }
+      case Failure(ex) =>
+        req.sender ! FlowUpdateResp(success = false, req.flowId, msg = ex.getLocalizedMessage)
+    })
     Behaviors.same
   }
 
+
   def onFlowQuery(req: FlowQueryRequest): Behavior[BrokerCommand] = {
+    flowService.queryFlow(req.flowId).onComplete(({
+      case Success((None, _, _)) => req.sender ! FlowQueryResp(success = true, Option.empty, msg = "not found")
+      case Success((Some(flow), flowDependencies, flowSchedules)) => {
+        val dependencyEntries = flowDependencies.map(d=>DependencyEntry(d.id,
+          d.preProjectId, d.preFlowId, d.preJobId,
+          d.rangeExpression, d.offsetExpression, d.createTime.getTime, d.updateTime.getTime))
+
+        val schedules = flowSchedules.map(s=>ScheduleEntry(s.id, s.scheduleType, s.expression,
+          s.createTime.getTime, s.updateTime.getTime))
+
+        val re = FlowInfoEntry(flow.flowId, flow.projectId, flow.flowName, flow.user,
+          flow.updateUser, flow.createTime.getTime, flow.updateTime.getTime,
+          dependencyEntries, schedules)
+
+        req.sender ! FlowQueryResp(success = true, Option.apply(re))
+      }
+      case Failure(ex) => req.sender ! FlowQueryResp(success = false, msg = ex.getLocalizedMessage)
+    }))
     Behaviors.same
   }
 }

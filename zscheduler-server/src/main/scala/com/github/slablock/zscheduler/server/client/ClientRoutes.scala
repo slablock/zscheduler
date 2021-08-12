@@ -10,17 +10,18 @@ import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerSta
 import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, FlowSubmitResp, FlowUpdateResp, JobSubmitResp, ProjectQueryResp, ProjectSubmitResp, ProjectUpdateResp}
 import com.github.slablock.zscheduler.server.client.ClientProtocol.{CODE_FAIL, CODE_SUCCESS, DependencyExpression, FlowSubmit, FlowSubmitResult, FlowUpdate, JobSubmit, JobSubmitResult, JobUpdate, ProjectSubmit, ProjectUpdate, ProjectWriteResult, ScheduleExpression, errorResult}
 import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport
-import io.circe.generic.auto._
+import io.circe.generic.extras.Configuration
+import io.circe.generic.extras.auto._
+import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
+import akka.actor.typed.scaladsl.AskPattern.Askable
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.TimeoutException
 import scala.concurrent.duration._
 
 class ClientRoutes(broker: ActorRef[BrokerCommand])(implicit system: ActorSystem[_]) extends ErrorAccumulatingCirceSupport {
-  import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
-  import akka.actor.typed.scaladsl.AskPattern.Askable
 
-  implicit val timeout: Timeout = 3.seconds
+  import ClientRoutes._
 
   private val projectRoute = new ProjectRoute(broker)
   private val flowRoute = new FlowRoute(broker)
@@ -41,14 +42,12 @@ class ClientRoutes(broker: ActorRef[BrokerCommand])(implicit system: ActorSystem
         jobRoute.route
     }
 
-
-
-
-
-
 }
 
 object ClientRoutes extends ErrorAccumulatingCirceSupport {
+
+  implicit val customConfig: Configuration = Configuration.default.withDefaults
+  implicit val timeout: Timeout = 3.seconds
 
   private val LOGGER: Logger = LoggerFactory.getLogger(classOf[ClientRoutes])
 

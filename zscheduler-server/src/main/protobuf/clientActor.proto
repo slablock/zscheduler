@@ -141,12 +141,16 @@ message ProjectQueryResp {
 
 message FlowSubmitResp {
     option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
-    int64 flowId = 1;
+    bool success = 1;
+    int64 flowId = 2;
+    string msg = 3;
 }
 
 message FlowUpdateResp {
     option (scalapb.message).extends = "com.github.slablock.zscheduler.server.actor.ClientActor.ClientCommand";
-    int64 flowId = 1;
+    bool success = 1;
+    int64 flowId = 2;
+    string msg = 3;
 }
 
 message FlowQueryResp {

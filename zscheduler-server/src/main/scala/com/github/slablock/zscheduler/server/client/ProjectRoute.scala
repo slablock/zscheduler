@@ -3,13 +3,10 @@ package com.github.slablock.zscheduler.server.client
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.util.Timeout
 import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{ProjectQueryRequest, ProjectSubmitRequest, ProjectUpdateRequest}
 import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ ProjectQueryResp, ProjectSubmitResp, ProjectUpdateResp}
 import com.github.slablock.zscheduler.server.client.ClientProtocol.{CODE_FAIL, CODE_SUCCESS,ProjectSubmit, ProjectUpdate, ProjectWriteResult}
-import io.circe.generic.auto._
 
-import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
 import akka.actor.typed.scaladsl.AskPattern.Askable
@@ -17,10 +14,10 @@ import akka.actor.typed.{ActorRef, ActorSystem}
 import com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand
 import com.github.slablock.zscheduler.server.client.ClientRoutes.errHandler
 import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport
+import io.circe.generic.extras.auto._
+import ClientRoutes._
 
 class ProjectRoute(broker: ActorRef[BrokerCommand])(implicit system: ActorSystem[_]) extends ErrorAccumulatingCirceSupport {
-
-  implicit val timeout: Timeout = 3.seconds
 
   lazy val route: Route = pathPrefix("project") {
     path("create") {

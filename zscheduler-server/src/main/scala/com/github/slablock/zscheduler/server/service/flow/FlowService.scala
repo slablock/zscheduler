@@ -10,7 +10,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class FlowService @Inject()(flowStorage: FlowStorage) {
 
-  def queryFlow(flowId: Long): Future[Option[FlowRow]] = flowStorage.queryFlow(flowId)
+  def queryFlow(flowId: Long)(implicit executionContext: ExecutionContext)
+  : Future[(Option[FlowRow], Seq[FlowDependencyRow], Seq[FlowScheduleRow])] = flowStorage.queryFlow(flowId)
 
   def saveFlow(req: FlowSubmitRequest)(implicit executionContext: ExecutionContext): Future[Long] = {
     val flowId = 0
