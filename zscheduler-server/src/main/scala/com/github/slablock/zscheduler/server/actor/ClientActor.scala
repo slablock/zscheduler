@@ -49,9 +49,6 @@ class ClientActor(context: ActorContext[ClientCommand]) extends AbstractBehavior
       case msg: ClusterInfo =>
         context.log.info("ClusterInfo {}", msg.data)
         Behaviors.same
-      case JobSubmitResp(jobId) => {
-        Behaviors.same
-      }
     }.receiveSignal {
       case (_, PostStop) =>
         binding.unbind()

@@ -5,8 +5,8 @@ import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand
-import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{FlowSubmitRequest, FlowUpdateRequest, JobSubmitRequest, JobUpdateRequest, ProjectQueryRequest}
-import com.github.slablock.zscheduler.server.actor.protos.clientActor.{FlowSubmitResp, FlowUpdateResp, JobSubmitResp, ProjectQueryResp}
+import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{FlowSubmitRequest, FlowUpdateRequest, JobQueryRequest, JobSubmitRequest, JobUpdateRequest, ProjectQueryRequest}
+import com.github.slablock.zscheduler.server.actor.protos.clientActor.{FlowSubmitResp, FlowUpdateResp, JobQueryResp, JobSubmitResp, JobUpdateResp, ProjectQueryResp}
 import com.github.slablock.zscheduler.server.client.ClientProtocol._
 import com.github.slablock.zscheduler.server.client.ClientRoutes.{errHandler, toDependencyMsg, toScheduleMsg}
 import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport
@@ -23,19 +23,32 @@ class JobRoute(broker: ActorRef[BrokerCommand])(implicit system: ActorSystem[_])
         entity(as[JobSubmit]) { job =>
           onComplete(broker.ask(ref => JobSubmitRequest(job.projectId, job.flowId, job.jobName, job.jobType, job.contentType,
             job.content, job.params, job.priority, job.user, toDependencyMsg(job.dependencies), ref))) {
-            case Success(JobSubmitResp(jobId)) => complete(JobSubmitResult(CODE_SUCCESS, jobId))
+            case Success(JobSubmitResp(success, jobId, msg)) => complete(JobSubmitResult(CODE_SUCCESS, jobId))
             case Failure(ex) => errHandler(ex)
           }
         }
       }
     } ~
+      path("query") {
+        pathEndOrSingleSlash {
+          get {
+            parameters(Symbol("jobId").as[Long]) { jobId =>
+              onComplete(broker.ask(ref => JobQueryRequest(jobId, ref))) {
+                case Success(JobQueryResp(success, data, msg)) =>
+                  complete(CODE_SUCCESS, data)
+                case Failure(ex) => errHandler(ex)
+              }
+            }
+          }
+        }
+      } ~
       path("modify") {
         post {
           entity(as[JobUpdate]) { job =>
             onComplete(broker.ask(ref => JobUpdateRequest(job.jobId, job.projectId, job.flowId, job.jobName, job.jobType, job.contentType,
               job.content, job.params, job.priority,
               job.user, job.updateUser, toDependencyMsg(job.dependencies), ref))) {
-              case Success(JobSubmitResp(jobId)) => complete(JobSubmitResult(CODE_SUCCESS, jobId))
+              case Success(JobUpdateResp(success, jobId, msg)) => complete(JobSubmitResult(CODE_SUCCESS, jobId))
               case Failure(ex) => errHandler(ex)
             }
           }

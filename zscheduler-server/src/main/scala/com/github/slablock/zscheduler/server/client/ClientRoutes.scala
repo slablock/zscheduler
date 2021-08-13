@@ -41,7 +41,6 @@ class ClientRoutes(broker: ActorRef[BrokerCommand])(implicit system: ActorSystem
         flowRoute.route ~
         jobRoute.route
     }
-
 }
 
 object ClientRoutes extends ErrorAccumulatingCirceSupport {

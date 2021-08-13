@@ -6,8 +6,8 @@ import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, Rou
 import com.github.slablock.zscheduler.dao.Tables.{JobDependencyRow, JobRow, ProjectRow}
 import com.github.slablock.zscheduler.server.actor.BrokerActor.BrokerCommand
 import com.github.slablock.zscheduler.server.actor.WorkerActor.WorkerCommand
-import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerStatus, FlowQueryRequest, FlowSubmitRequest, FlowUpdateRequest, JobSubmitRequest, ProjectQueryRequest, ProjectSubmitRequest, ProjectUpdateRequest}
-import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, DependencyEntry, FlowInfoEntry, FlowQueryResp, FlowSubmitResp, FlowUpdateResp, JobSubmitResp, ProjectInfoEntry, ProjectQueryResp, ProjectSubmitResp, ProjectUpdateResp, ScheduleEntry}
+import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerStatus, FlowQueryRequest, FlowSubmitRequest, FlowUpdateRequest, JobQueryRequest, JobSubmitRequest, JobUpdateRequest, ProjectQueryRequest, ProjectSubmitRequest, ProjectUpdateRequest}
+import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, DependencyEntry, FlowInfoEntry, FlowQueryResp, FlowSubmitResp, FlowUpdateResp, JobInfoEntry, JobQueryResp, JobSubmitResp, JobUpdateResp, ProjectInfoEntry, ProjectQueryResp, ProjectSubmitResp, ProjectUpdateResp, ScheduleEntry}
 import com.github.slablock.zscheduler.server.actor.protos.workerActor.{TaskSubmitRequest, WorkerMsg}
 import com.github.slablock.zscheduler.server.guice.Injectors
 import com.github.slablock.zscheduler.server.service.flow.FlowService
@@ -37,6 +37,8 @@ class BrokerActor(context: ActorContext[BrokerCommand]) extends AbstractBehavior
       case req: FlowUpdateRequest => onFlowUpdate(req)
       case req: FlowQueryRequest => onFlowQuery(req)
       case req: JobSubmitRequest => onJobSubmit(req)
+      case req: JobQueryRequest => onJobQuery(req)
+      case req: JobUpdateRequest => onJobUpdate(req)
     }
   }
 
@@ -53,12 +55,42 @@ class BrokerActor(context: ActorContext[BrokerCommand]) extends AbstractBehavior
       .onComplete({
         case Success(jobId) =>
           worker ! TaskSubmitRequest(s"$jobId", req.jobName, req.jobType, req.content, req.user, context.self)
-          req.sender ! JobSubmitResp(jobId)
+          req.sender ! JobSubmitResp(success = true, jobId)
         case Failure(ex) =>
-          req.sender ! JobSubmitResp(-1)
+          req.sender ! JobSubmitResp(success = false, msg = ex.getLocalizedMessage)
       })
     Behaviors.same
   }
+
+  def onJobQuery(req: JobQueryRequest): Behavior[BrokerCommand] = {
+    jobService.queryJob(req.jobId).onComplete({
+      case Success((None, _)) => req.sender ! JobQueryResp(success = true, Option.empty, msg = "not found")
+      case Success((Some(jobRow), jobDependencies)) => {
+        val dependencies = jobDependencies
+          .map(d=>DependencyEntry(d.id, d.preProjectId,d.preFlowId, d.preJobId, d.rangeExpression, d.offsetExpression,
+            d.createTime.getTime, d.updateTime.getTime))
+        req.sender ! JobQueryResp(success = true, Option.apply(JobInfoEntry(jobRow.jobId, jobRow.projectId, jobRow.flowId,
+          jobRow.jobName, jobRow.jobType, jobRow.contentType, jobRow.content, jobRow.params, jobRow.priority,
+          jobRow.user, jobRow.updateUser, jobRow.createTime.getTime, jobRow.updateTime.getTime, dependencies)))
+      }
+    })
+    Behaviors.same
+  }
+
+  def onJobUpdate(req: JobUpdateRequest): Behavior[BrokerCommand] = {
+    jobService.modifyJob(req).onComplete({
+      case Success(rows) => {
+        if (rows > 0) {
+          req.sender ! JobUpdateResp(success = true, req.jobId)
+        } else {
+          req.sender ! JobUpdateResp(success = false, req.jobId, msg = "not found")
+        }
+      }
+      case Failure(ex) => req.sender ! JobUpdateResp(success = false, req.jobId, ex.getLocalizedMessage)
+    })
+    Behaviors.same
+  }
+
 
   def onProjectSubmit(req: ProjectSubmitRequest): Behavior[BrokerCommand] = {
     projectService.addProject(req)
