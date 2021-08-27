@@ -86,6 +86,26 @@
             <artifactId>scalapb-runtime_${scala.binary.version}</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.github.alonsodomin.cron4s</groupId>
+            <artifactId>cron4s-core_${scala.binary.version}</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.alonsodomin.cron4s</groupId>
+            <artifactId>cron4s-joda_${scala.binary.version}</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.joda</groupId>
+            <artifactId>joda-convert</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>

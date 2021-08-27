@@ -25,24 +25,25 @@ trait Tables {
    *  @param flowId Database column flowId SqlType(BIGINT UNSIGNED), Default(0)
    *  @param scheduleTime Database column scheduleTime SqlType(DATETIME)
    *  @param dataTime Database column dataTime SqlType(DATETIME)
+   *  @param taskType Database column taskType SqlType(INT), Default(0)
    *  @param progress Database column progress SqlType(FLOAT), Default(0.0)
-   *  @param status Database column status SqlType(INT UNSIGNED), Default(0)
+   *  @param status Database column status SqlType(INT), Default(0)
    *  @param executeUser Database column executeUser SqlType(VARCHAR), Length(32,true), Default()
    *  @param executeStartTime Database column executeStartTime SqlType(DATETIME), Default(None)
    *  @param executeEndTime Database column executeEndTime SqlType(DATETIME), Default(None)
    *  @param createTime Database column createTime SqlType(DATETIME)
    *  @param updateTime Database column updateTime SqlType(DATETIME) */
-  case class ExecutionFlowRow(execId: Long, attemptId: Long = 0L, projectId: Long = 0L, flowId: Long = 0L, scheduleTime: java.sql.Timestamp, dataTime: java.sql.Timestamp, progress: Float = 0.0F, status: Long = 0L, executeUser: String = "", executeStartTime: Option[java.sql.Timestamp] = None, executeEndTime: Option[java.sql.Timestamp] = None, createTime: java.sql.Timestamp, updateTime: java.sql.Timestamp)
+  case class ExecutionFlowRow(execId: Long, attemptId: Long = 0L, projectId: Long = 0L, flowId: Long = 0L, scheduleTime: java.sql.Timestamp, dataTime: java.sql.Timestamp, taskType: Int = 0, progress: Float = 0.0F, status: Int = 0, executeUser: String = "", executeStartTime: Option[java.sql.Timestamp] = None, executeEndTime: Option[java.sql.Timestamp] = None, createTime: java.sql.Timestamp, updateTime: java.sql.Timestamp)
   /** GetResult implicit for fetching ExecutionFlowRow objects using plain SQL queries */
-  implicit def GetResultExecutionFlowRow(implicit e0: GR[Long], e1: GR[java.sql.Timestamp], e2: GR[Float], e3: GR[String], e4: GR[Option[java.sql.Timestamp]]): GR[ExecutionFlowRow] = GR{
+  implicit def GetResultExecutionFlowRow(implicit e0: GR[Long], e1: GR[java.sql.Timestamp], e2: GR[Int], e3: GR[Float], e4: GR[String], e5: GR[Option[java.sql.Timestamp]]): GR[ExecutionFlowRow] = GR{
     prs => import prs._
-    ExecutionFlowRow.tupled((<<[Long], <<[Long], <<[Long], <<[Long], <<[java.sql.Timestamp], <<[java.sql.Timestamp], <<[Float], <<[Long], <<[String], <<?[java.sql.Timestamp], <<?[java.sql.Timestamp], <<[java.sql.Timestamp], <<[java.sql.Timestamp]))
+    ExecutionFlowRow.tupled((<<[Long], <<[Long], <<[Long], <<[Long], <<[java.sql.Timestamp], <<[java.sql.Timestamp], <<[Int], <<[Float], <<[Int], <<[String], <<?[java.sql.Timestamp], <<?[java.sql.Timestamp], <<[java.sql.Timestamp], <<[java.sql.Timestamp]))
   }
   /** Table description of table execution_flow. Objects of this class serve as prototypes for rows in queries. */
   class ExecutionFlow(_tableTag: Tag) extends profile.api.Table[ExecutionFlowRow](_tableTag, Some("zscheduler"), "execution_flow") {
-    def * = (execId, attemptId, projectId, flowId, scheduleTime, dataTime, progress, status, executeUser, executeStartTime, executeEndTime, createTime, updateTime) <> (ExecutionFlowRow.tupled, ExecutionFlowRow.unapply)
+    def * = (execId, attemptId, projectId, flowId, scheduleTime, dataTime, taskType, progress, status, executeUser, executeStartTime, executeEndTime, createTime, updateTime) <> (ExecutionFlowRow.tupled, ExecutionFlowRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(execId), Rep.Some(attemptId), Rep.Some(projectId), Rep.Some(flowId), Rep.Some(scheduleTime), Rep.Some(dataTime), Rep.Some(progress), Rep.Some(status), Rep.Some(executeUser), executeStartTime, executeEndTime, Rep.Some(createTime), Rep.Some(updateTime))).shaped.<>({r=>import r._; _1.map(_=> ExecutionFlowRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10, _11, _12.get, _13.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = ((Rep.Some(execId), Rep.Some(attemptId), Rep.Some(projectId), Rep.Some(flowId), Rep.Some(scheduleTime), Rep.Some(dataTime), Rep.Some(taskType), Rep.Some(progress), Rep.Some(status), Rep.Some(executeUser), executeStartTime, executeEndTime, Rep.Some(createTime), Rep.Some(updateTime))).shaped.<>({r=>import r._; _1.map(_=> ExecutionFlowRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10.get, _11, _12, _13.get, _14.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column execId SqlType(BIGINT UNSIGNED), AutoInc, PrimaryKey */
     val execId: Rep[Long] = column[Long]("execId", O.AutoInc, O.PrimaryKey)
@@ -56,10 +57,12 @@ trait Tables {
     val scheduleTime: Rep[java.sql.Timestamp] = column[java.sql.Timestamp]("scheduleTime")
     /** Database column dataTime SqlType(DATETIME) */
     val dataTime: Rep[java.sql.Timestamp] = column[java.sql.Timestamp]("dataTime")
+    /** Database column taskType SqlType(INT), Default(0) */
+    val taskType: Rep[Int] = column[Int]("taskType", O.Default(0))
     /** Database column progress SqlType(FLOAT), Default(0.0) */
     val progress: Rep[Float] = column[Float]("progress", O.Default(0.0F))
-    /** Database column status SqlType(INT UNSIGNED), Default(0) */
-    val status: Rep[Long] = column[Long]("status", O.Default(0L))
+    /** Database column status SqlType(INT), Default(0) */
+    val status: Rep[Int] = column[Int]("status", O.Default(0))
     /** Database column executeUser SqlType(VARCHAR), Length(32,true), Default() */
     val executeUser: Rep[String] = column[String]("executeUser", O.Length(32,varying=true), O.Default(""))
     /** Database column executeStartTime SqlType(DATETIME), Default(None) */
@@ -352,8 +355,8 @@ trait Tables {
    *  @param scheduleTime Database column scheduleTime SqlType(DATETIME)
    *  @param dataTime Database column dataTime SqlType(DATETIME)
    *  @param progress Database column progress SqlType(FLOAT), Default(0.0)
-   *  @param taskType Database column taskType SqlType(INT UNSIGNED), Default(0)
-   *  @param status Database column status SqlType(INT UNSIGNED), Default(0)
+   *  @param taskType Database column taskType SqlType(INT), Default(0)
+   *  @param status Database column status SqlType(INT), Default(0)
    *  @param finishReason Database column finishReason SqlType(VARCHAR), Length(1024,true), Default()
    *  @param workerId Database column workerId SqlType(INT), Default(0)
    *  @param executeUser Database column executeUser SqlType(VARCHAR), Length(32,true), Default()
@@ -361,11 +364,11 @@ trait Tables {
    *  @param executeEndTime Database column executeEndTime SqlType(DATETIME), Default(None)
    *  @param createTime Database column createTime SqlType(DATETIME)
    *  @param updateTime Database column updateTime SqlType(DATETIME) */
-  case class TaskRow(taskId: Long, attemptId: Long = 0L, projectId: Long = 0L, flowId: Long = 0L, jobId: Long = 0L, content: String, params: String = "", scheduleTime: java.sql.Timestamp, dataTime: java.sql.Timestamp, progress: Float = 0.0F, taskType: Long = 0L, status: Long = 0L, finishReason: String = "", workerId: Int = 0, executeUser: String = "", executeStartTime: Option[java.sql.Timestamp] = None, executeEndTime: Option[java.sql.Timestamp] = None, createTime: java.sql.Timestamp, updateTime: java.sql.Timestamp)
+  case class TaskRow(taskId: Long, attemptId: Long = 0L, projectId: Long = 0L, flowId: Long = 0L, jobId: Long = 0L, content: String, params: String = "", scheduleTime: java.sql.Timestamp, dataTime: java.sql.Timestamp, progress: Float = 0.0F, taskType: Int = 0, status: Int = 0, finishReason: String = "", workerId: Int = 0, executeUser: String = "", executeStartTime: Option[java.sql.Timestamp] = None, executeEndTime: Option[java.sql.Timestamp] = None, createTime: java.sql.Timestamp, updateTime: java.sql.Timestamp)
   /** GetResult implicit for fetching TaskRow objects using plain SQL queries */
   implicit def GetResultTaskRow(implicit e0: GR[Long], e1: GR[String], e2: GR[java.sql.Timestamp], e3: GR[Float], e4: GR[Int], e5: GR[Option[java.sql.Timestamp]]): GR[TaskRow] = GR{
     prs => import prs._
-    TaskRow.tupled((<<[Long], <<[Long], <<[Long], <<[Long], <<[Long], <<[String], <<[String], <<[java.sql.Timestamp], <<[java.sql.Timestamp], <<[Float], <<[Long], <<[Long], <<[String], <<[Int], <<[String], <<?[java.sql.Timestamp], <<?[java.sql.Timestamp], <<[java.sql.Timestamp], <<[java.sql.Timestamp]))
+    TaskRow.tupled((<<[Long], <<[Long], <<[Long], <<[Long], <<[Long], <<[String], <<[String], <<[java.sql.Timestamp], <<[java.sql.Timestamp], <<[Float], <<[Int], <<[Int], <<[String], <<[Int], <<[String], <<?[java.sql.Timestamp], <<?[java.sql.Timestamp], <<[java.sql.Timestamp], <<[java.sql.Timestamp]))
   }
   /** Table description of table task. Objects of this class serve as prototypes for rows in queries. */
   class Task(_tableTag: Tag) extends profile.api.Table[TaskRow](_tableTag, Some("zscheduler"), "task") {
@@ -393,10 +396,10 @@ trait Tables {
     val dataTime: Rep[java.sql.Timestamp] = column[java.sql.Timestamp]("dataTime")
     /** Database column progress SqlType(FLOAT), Default(0.0) */
     val progress: Rep[Float] = column[Float]("progress", O.Default(0.0F))
-    /** Database column taskType SqlType(INT UNSIGNED), Default(0) */
-    val taskType: Rep[Long] = column[Long]("taskType", O.Default(0L))
-    /** Database column status SqlType(INT UNSIGNED), Default(0) */
-    val status: Rep[Long] = column[Long]("status", O.Default(0L))
+    /** Database column taskType SqlType(INT), Default(0) */
+    val taskType: Rep[Int] = column[Int]("taskType", O.Default(0))
+    /** Database column status SqlType(INT), Default(0) */
+    val status: Rep[Int] = column[Int]("status", O.Default(0))
     /** Database column finishReason SqlType(VARCHAR), Length(1024,true), Default() */
     val finishReason: Rep[String] = column[String]("finishReason", O.Length(1024,varying=true), O.Default(""))
     /** Database column workerId SqlType(INT), Default(0) */

@@ -9,11 +9,15 @@ import com.github.slablock.zscheduler.server.actor.WorkerActor.WorkerCommand
 import com.github.slablock.zscheduler.server.actor.protos.brokerActor.{BrokerStatus, FlowQueryRequest, FlowSubmitRequest, FlowUpdateRequest, JobQueryRequest, JobSubmitRequest, JobUpdateRequest, ProjectQueryRequest, ProjectSubmitRequest, ProjectUpdateRequest}
 import com.github.slablock.zscheduler.server.actor.protos.clientActor.{ClusterInfo, DependencyEntry, FlowInfoEntry, FlowQueryResp, FlowSubmitResp, FlowUpdateResp, JobInfoEntry, JobQueryResp, JobSubmitResp, JobUpdateResp, ProjectInfoEntry, ProjectQueryResp, ProjectSubmitResp, ProjectUpdateResp, ScheduleEntry}
 import com.github.slablock.zscheduler.server.actor.protos.workerActor.{TaskSubmitRequest, WorkerMsg}
+import com.github.slablock.zscheduler.server.domain.TaskType
 import com.github.slablock.zscheduler.server.guice.Injectors
+import com.github.slablock.zscheduler.server.service.executionFlow.ExecutionFlowService
 import com.github.slablock.zscheduler.server.service.flow.FlowService
 import com.github.slablock.zscheduler.server.service.job.JobService
+import com.github.slablock.zscheduler.server.service.plan.PlanService
 import com.github.slablock.zscheduler.server.service.project.ProjectService
 import net.codingwell.scalaguice.InjectorExtensions.ScalaInjector
+import org.joda.time.DateTime
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
@@ -23,6 +27,8 @@ class BrokerActor(context: ActorContext[BrokerCommand]) extends AbstractBehavior
   private val jobService = Injectors.get().instance[JobService]
   private val projectService = Injectors.get().instance[ProjectService]
   private val flowService = Injectors.get().instance[FlowService]
+  private val planService = Injectors.get().instance[PlanService]
+  private val executionFlowService = Injectors.get().instance[ExecutionFlowService]
 
   implicit val executionContext: ExecutionContext = context.system.executionContext
   val worker: ActorRef[WorkerCommand] = context.spawn(Routers.group(WorkerActor.serviceKey).withRoundRobinRouting(), "worker-group")
@@ -131,10 +137,26 @@ class BrokerActor(context: ActorContext[BrokerCommand]) extends AbstractBehavior
 
   def onFlowSubmit(req: FlowSubmitRequest): Behavior[BrokerCommand] = {
     flowService.saveFlow(req).onComplete({
-      case Success(flowId) => req.sender ! FlowSubmitResp(success = true, flowId)
+      case Success(flowId) => {
+
+        req.sender ! FlowSubmitResp(success = true, flowId)
+      }
       case Failure(ex) => req.sender ! FlowSubmitResp(success = false, -1, ex.getLocalizedMessage)
     })
     Behaviors.same
+  }
+
+  def scheduleFlow(flowId: Long): Unit = {
+    planService.getScheduleTimeAfter(flowId, DateTime.now()).onComplete({
+      case Success(Some(dateTime)) => {
+        executionFlowService.getByFlowIdAndScheduleTime(flowId, dateTime.getMillis, TaskType.PLAN).onComplete({
+          case Success(Some(_)) =>
+          case Success(None) =>
+          case _ =>
+        })
+      }
+      case _ =>
+    })
   }
 
   def onFlowUpdate(req: FlowUpdateRequest): Behavior[BrokerCommand] = {
